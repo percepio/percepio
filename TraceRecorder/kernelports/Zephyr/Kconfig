@@ -3,6 +3,8 @@
 
 if TRACING && PERCEPIO_TRACERECORDER
 
+menu "Percepio Tracealyzer"
+
 menu "RTOS Hidden Settings"
     visible if n
 config PERCEPIO_TRC_CFG_RECORDER_RTOS_ZEPHYR
@@ -31,8 +33,9 @@ config PERCEPIO_TRC_CFG_USE_SYSCALL_EXTENSION
       the build/syscalls-v<zephyr-version>.xml file to be loaded as an extension within Tracealyzer.
 endmenu # "RTOS Specific"
 
-
 # Source recorder common config
 rsource "../../config/Kconfig"
+
+endmenu # "Percepio Tracealyzer"
 
 endif # TRACING && PERCEPIO_TRACERECORDER
