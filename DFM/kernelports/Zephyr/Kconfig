@@ -1,0 +1,202 @@
+config PERCEPIO_DEVALERT
+    bool "Enable DevAlert"
+    default n
+
+if PERCEPIO_DEVALERT
+
+config PERCEPIO_DFM_CFG_FIRMWARE_VERSION
+    string "Firmware version"
+    default "X.Y.Z"
+    help
+      The firmware verison. This needs to be set to differentiate alerts between different versions
+
+config PERCEPIO_DFM_CFG_PRODUCTID
+    int "Product id"
+    default 1
+    help
+      An identifier to identify the product type.
+
+config PERCEPIO_DFM_CFG_ENABLE_DEBUG_PRINT
+    bool "Enable debug messages"
+    default n
+    help
+      Enable Diagnostic messages from DFM_DEBUG(...). Will use DFM_ERROR to output debug information.
+
+menu "Cloudport Config"
+
+choice PERCEPIO_DFM_CFG_CLOUDPORT
+    prompt "Cloudport"
+    default PERCEPIO_DFM_CFG_CLOUDPORT_NONE
+
+config PERCEPIO_DFM_CFG_CLOUDPORT_SERIAL
+    bool "Serial"
+    help
+      Send Alerts and chunks through the serial port, used with a serial terminal and accompanying
+      scripts, which post-processes the data and makes it available in DevAlert.
+
+config PERCEPIO_DFM_CFG_CLOUDPORT_NONE
+	bool "None"
+	help
+		Don't send alerts via the cloudport
+
+endchoice # choice PERCEPIO_DFM_CFG_CLOUDPORT
+
+endmenu # menu "Cloudport Config"
+
+menu "Storageport Config"
+
+choice PERCEPIO_DFM_CFG_STORAGEPORT
+	prompt "Storageport"
+	default PERCEPIO_DFM_CFG_STORAGEPORT_NONE
+
+config PERCEPIO_DFM_CFG_STORAGEPORT_NONE
+	bool "None"
+	help
+		Don't store alerts.
+
+config PERCEPIO_DFM_CFG_STORAGEPORT_FLASH
+	bool "Flash via FCB"
+	help
+		Storage alerts on flash via the Zephyr FCB module.
+endchoice # choice PERCEPIO_DFM_CFG_STORAGEPORT
+
+endmenu # menu "Storageport Config"
+
+menu "Buffer Settings"
+
+config PERCEPIO_DFM_CFG_MAX_PAYLOAD_CHUNK_SIZE
+    int "Maximum payload chunk size"
+    default 1000
+    help
+      The maximum size of a "chunk" that will be stored or sent.
+
+config PERCEPIO_DFM_CFG_DEVICE_NAME_MAX_LEN
+    int "Maximum device name length"
+    default 32
+    help
+      The maximum length of the device name.
+    
+config PERCEPIO_DFM_CFG_MAX_PAYLOADS
+    int "Max Payloads"
+    default 8
+    help
+      The maximum number of payloads which can be attached to a single alert.
+
+config PERCEPIO_DFM_CFG_MAX_SYMPTOMS
+    int "Max Symptoms"
+    default 8
+    help
+      The maximum number of symptoms which can be attached to a single alert.
+
+config PERCEPIO_DFM_CFG_FIRMWARE_VERSION_MAX_LEN
+    int "Maximum firmware version string length"
+    default 64
+    help
+      The max firmware version string length.
+
+config PERCEPIO_DFM_CFG_DESCRIPTION_MAX_LEN
+    int "Description string maximum length"
+    default 64
+    help
+      The maximum length of the description string.
+
+config PERCEPIO_DFM_CFG_DELAY_BETWEEN_SEND
+    int "Delay between sends"
+    default 0
+    help
+      Create a delay between transfers. Should normally not be needed.
+
+endmenu # menu "Buffer Settings"
+
+menu "Strategy Settings"
+
+choice PERCEPIO_DFM_CFG_SELECTED_STORAGE_STRATEGY
+    prompt "Storage strategy"
+    default PERCEPIO_DFM_CFG_SELECTED_STORAGE_STRATEGY_IGNORE
+
+config PERCEPIO_DFM_CFG_SELECTED_STORAGE_STRATEGY_IGNORE
+    bool "Ignore"
+    help
+      Never store alerts/payloads
+
+config PERCEPIO_DFM_CFG_SELECTED_STORAGE_STRATEGY_OVERWRITE
+    bool "Overwrite"
+    help
+      Overwrite old alerts/payloads if the FCB is full.
+
+config PERCEPIO_DFM_CFG_SELECTED_STORAGE_STRATEGY_SKIP
+    bool "Skip"
+    help
+      Don't save the new alert/payload of the FCB already is full.
+
+endchoice # choice "PERCEPIO_SELECTED_STORAGE_STRATEGY"
+
+choice PERCEPIO_DFM_CFG_SELECTED_CLOUD_STRATEGY
+    prompt "Cloud strategy"
+    default PERCEPIO_DFM_CFG_SELECTED_CLOUD_STRATEGY_ONLINE
+
+config PERCEPIO_DFM_CFG_SELECTED_CLOUD_STRATEGY_ONLINE
+    bool "Online"
+    help
+      Attempt to send alerts/payloads.
+
+config PERCEPIO_DFM_CFG_SELECTED_CLOUD_STRATEGY_OFFLINE
+    bool "Offline"
+    help
+      Don't attempt to send alerts/payloads.
+
+endchoice
+
+choice PERCEPIO_DFM_CFG_SELECTED_SESSIONID_STRATEGY
+    prompt "Session Id Strategy"
+    default PERCEPIO_DFM_CFG_SELECTED_SESSIONID_STRATEGY_ONALERT
+
+config PERCEPIO_DFM_CFG_SELECTED_SESSIONID_STRATEGY_ONSTARTUP
+    bool "On Startup"
+    help
+      Set the session id on startup
+
+config PERCEPIO_DFM_CFG_SELECTED_SESSIONID_STRATEGY_ONALERT
+    bool "On Alert"
+    help
+      Set the session id when an alert is generated
+      
+endchoice # choice "PERCEPIO_DFM_CFG_SELECTED_SESSIONID_STRATEGY"
+
+endmenu # menu "Strategy Settings"
+
+menuconfig PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
+    bool "Enable coredumps"
+    default n
+    depends on (DEBUG_COREDUMP && DEBUG_COREDUMP_BACKEND_OTHER && DEBUG_COREDUMP_MEMORY_DUMP_MIN)
+    help
+      Include coredumps in Traces.
+
+if PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
+
+config PERCEPIO_DFM_CFG_STACKDUMP_SIZE
+    int "Stackdump size"
+    default 300
+    help
+      How many bytes to dump from the stack (relative to the current stack pointer)
+
+config PERCEPIO_DFM_CFG_MAX_COREDUMP_SIZE
+    int "Coredump size"
+    default 1000
+    help
+      Maximum total size of the coredump. Since this uses a buffer in memory as a temporary work area,
+      this will affect memory usage.
+
+config PERCEPIO_DFM_CFG_ADD_TRACE
+    bool "Save Trace"
+    depends on (PERCEPIO_TRACERECORDER && PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER)
+    default y
+    help
+      If this is set to true, crashcatcher will always try to save a trace with the Alert.
+      Please not that this feature requires the Percepio Trace Recorder to be included in
+      the project as well.
+
+endif # PERCEPIO_DFM_ENABLE_COREDUMPS
+
+rsource "storageports/Flash/Kconfig"
+endif # PERCEPIO_DEVALERT
