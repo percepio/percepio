@@ -1,0 +1,18 @@
+# Copyright (c) 2021 Percepio AB
+# SPDX-License-Identifier: Apache-2.0
+
+menu "FCB Config"
+
+config PERCEPIO_DFM_CFG_STORAGE_PORT_FCB_SECTOR_COUNT
+    int "Sector Count"
+    default 1
+
+config PERCEPIO_DFM_CFG_STORAGE_PORT_FCB_SECTOR_SIZE
+    hex "Sector Size"
+    default 0x10000
+    help
+       Specifies the sector size to use for the FCB in the dfm_partition, this
+       should be a multiple of the underlying flash sector size (depends on
+       the flash hardware organization) in which the dfm_partition resides.
+
+endmenu # menu "FCB Config"
