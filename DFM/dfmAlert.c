@@ -12,6 +12,9 @@
 
 #if ((DFM_CFG_ENABLED) >= 1)
 
+extern uint8_t fail_count;
+extern uint8_t num_fail;
+
 static DfmResult_t prvDfmAlertInitialize(DfmAlertHandle_t xAlertHandle, uint8_t ucDfmVersion, uint32_t ulProduct, const char* szFirmwareVersion);
 static uint32_t prvDfmAlertCalculateChecksum(uint8_t* pxData, uint32_t ulSize);
 static void prvDfmAlertReset(DfmAlert_t* pxAlert);
@@ -515,11 +518,13 @@ DfmResult_t xDfmAlertEnd(DfmAlertHandle_t xAlertHandle)
 	pxAlert->ulChecksum = prvDfmAlertCalculateChecksum((uint8_t*)pxAlert, sizeof(DfmAlert_t) - sizeof(uint32_t));
 
 	/* Try to send */
-	if (prvDfmProcessAlert(prvSendAlert, prvSendPayloadChunk) == DFM_SUCCESS)
-	{
-		prvDfmAlertReset(pxAlert);
+	if (fail_count >= num_fail) {
+		if (prvDfmProcessAlert(prvSendAlert, prvSendPayloadChunk) == DFM_SUCCESS)
+		{
+			prvDfmAlertReset(pxAlert);
 
-		return DFM_SUCCESS;
+			return DFM_SUCCESS;
+		}
 	}
 
 	/* Try to store */
@@ -672,6 +677,8 @@ static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlert
 		return DFM_FAIL;
 	}
 
+	memset(pvBuffer, 0, ulBufferSize);
+
 	while (xDfmStorageGetAlert(pvBuffer, ulBufferSize) == DFM_SUCCESS)
 	{
 		if (xDfmEntryCreateAlertFromBuffer(&xEntryHandle) == DFM_FAIL)
@@ -705,6 +712,8 @@ static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlert
 			}
 		}
 
+		memset(pvBuffer, 0, ulBufferSize);
+
 		while (xDfmStorageGetPayloadChunk(cSessionIdBuffer, ulAlertId, pvBuffer, ulBufferSize) == DFM_SUCCESS)
 		{
 			if (xDfmEntryCreatePayloadChunkFromBuffer(cSessionIdBuffer , ulAlertId, &xEntryHandle) == DFM_FAIL)
@@ -716,6 +725,7 @@ static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlert
 			{
 				return DFM_FAIL;
 			}
+			memset(pvBuffer, 0, ulBufferSize);
 		}
 	}
 

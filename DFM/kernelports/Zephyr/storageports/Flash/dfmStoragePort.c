@@ -75,9 +75,7 @@ struct flash_sector xFlashCircularBufferSector[CONFIG_PERCEPIO_DFM_CFG_STORAGE_P
 
 typedef struct DfmWalkData
 {
-	void* pvBuffer;
-	uint32_t ulBufferSize;
-	uint32_t ulType;
+	uint32_t ulCurrentType;
 	uint32_t ulOffset;
 	uint16_t usExpectedEntryId;
 	uint16_t usExpectedEntryCount;
@@ -87,6 +85,7 @@ static DfmStoragePortData_t* pxStoragePortData;
 
 typedef struct DfmTraversionState {
 	struct fcb_entry_ctx xEntryCtx;
+	uint8_t ucIsDirty;
 } DfmTraversionState_t;
 
 static DfmTraversionState_t xTraversionState = {
@@ -100,7 +99,7 @@ static DfmTraversionState_t xTraversionState = {
  * @param pxWalkData The entry request specification, essentially. What are we expecting
  * @return
  */
-static int prvVerifyMetadata(DfmStorageMetadata_t* pxFlashMetadata, DfmWalkData_t* pxWalkData)
+static int prvVerifyMetadata(DfmStorageMetadata_t* pxFlashMetadata, DfmWalkData_t* pxWalkData, uint32_t ulBufferSize)
 {
 	/* Verify content */
 	if (pxFlashMetadata->ucStartMarker[0] != 0x44 ||
@@ -109,22 +108,12 @@ static int prvVerifyMetadata(DfmStorageMetadata_t* pxFlashMetadata, DfmWalkData_
 		pxFlashMetadata->ucStartMarker[3] != 0x61)
 	{
 		/* Incorrect entry, not much we can do about that */
-		return 0;
+		return -1;
 	}
 
-	if (pxFlashMetadata->ulType != pxWalkData->ulType)
+	if (pxFlashMetadata->ulType != pxWalkData->ulCurrentType)
 	{
-		if (pxWalkData->ulType == DFM_STORAGE_PORT_ALERT_TYPE)
-		{
-			/* We're looking for an alert, so we keep looking */
-			return 0;
-		}
-		if (pxWalkData->ulType == DFM_STORAGE_PORT_PAYLOAD_TYPE)
-		{
-			/* We're looking for a payload but found something else, abort */
-			//TODO: Investigate if we can have alerts which should have payloads which don't and makes us end up here
-			return -1;
-		}
+		return -1;
 	}
 
 	if (pxFlashMetadata->usEntryId != pxWalkData->usExpectedEntryId)
@@ -132,7 +121,7 @@ static int prvVerifyMetadata(DfmStorageMetadata_t* pxFlashMetadata, DfmWalkData_
 		return -1;
 	}
 
-	if (xDfmFlashMetadata.ulDataSize > (pxWalkData->ulBufferSize - pxWalkData->ulOffset))
+	if (xDfmFlashMetadata.ulDataSize > (ulBufferSize - pxWalkData->ulOffset))
 	{
 		/* Too big, not much we can do about that, abort */
 		return -1;
@@ -142,91 +131,110 @@ static int prvVerifyMetadata(DfmStorageMetadata_t* pxFlashMetadata, DfmWalkData_
 }
 
 /**
- * A DFM specific implementation of fcb_walk. Since the fcb_walk-function provided by zephyr expect all data to be
- * traversed at once, while we need to traverse parts of it between function calls (i.e. over multiple
- * xDfmStorageGetAlert and xDfmStorageGetPayload calls), this stateful implementation is included with the storage port.
+ * Get the next payload chunk/alert from the fcb. This can mean reading multiple fcb entries.
  * @param pxFcb Pointer to the struct which describes the FCB
  * @param pxTraversionState A container object for keeping the fcb context, needed between the traversions
- * @param pxWalkData The requested data (specifies, for example, whether a payload or alert is requested)
- * @return
+ * @param pvBuffer The buffer containing the current alert/payload chunk which is supposed to be retrieved
+ * @param ulBufferSize Size of the aforementioned buffer
+ * @return 0 => success, !0 => fail
  */
-static int prvDfmFcbWalk(struct fcb *pxFcb, DfmTraversionState_t* pxTraversionState, DfmWalkData_t* pxWalkData)
+static int prvDfmGetNext(struct fcb *pxFcb, DfmTraversionState_t* pxTraversionState, void* pvBuffer, uint32_t ulBufferSize)
 {
-	void* pvStartSector;
+	DfmWalkData_t xWalkData = { 0 };
+	void* pvStartSector = NULL;
+	int lWalkResult = 0;
+	int lReadResult = 0;
+
 	if (pxTraversionState->xEntryCtx.loc.fe_sector == NULL)
 		pvStartSector = (void*)pxFcb->f_oldest;
 	else
 		pvStartSector = (void*)pxTraversionState->xEntryCtx.loc.fe_sector;
 
-	int lWalkResult = fcb_getnext(pxFcb, &pxTraversionState->xEntryCtx.loc);
-	pxTraversionState->xEntryCtx.fap = pxFcb->fap;
-
-	/* We've traversed all of the circular buffer, we're done*/
-	if (lWalkResult == -ENOTSUP)
+	while (1)
 	{
-		/*
-		 * In case we've reached the end of the circular buffer, but are fetching payloads, we don't want to perform a
-		 * rotation since we'll do another attempt at retrieving alerts (which is when the actual rotation should be made)
-		 */
-		if (pxWalkData->ulType == DFM_STORAGE_PORT_ALERT_TYPE)
+		lWalkResult = fcb_getnext(pxFcb, &pxTraversionState->xEntryCtx.loc);
+		pxTraversionState->xEntryCtx.fap = pxFcb->fap;
+
+		if (lWalkResult == -ENOTSUP)
+		{
+			if (pxTraversionState->ucIsDirty)
+			{
+				fcb_rotate(pxFcb);
+			}
+
+			/* Reset the traversion context, we've traversed the FCB */
+			memset(&xTraversionState, 0, sizeof(DfmTraversionState_t));
+
+			return -1;
+		}
+
+		pxTraversionState->ucIsDirty = 1;
+
+		if (pvStartSector != pxTraversionState->xEntryCtx.loc.fe_sector)
+		{
+			/* We've entered a new sector, increase the counter */
+			/* Since we've traversed the previous block, we can now rotate it */
 			fcb_rotate(pxFcb);
-		return -1;
+		}
+
+		/* Start by reading the metadata */
+		lReadResult = flash_area_read(
+			pxTraversionState->xEntryCtx.fap,
+			FCB_ENTRY_FA_DATA_OFF(pxTraversionState->xEntryCtx.loc),
+			&xDfmFlashMetadata,
+			sizeof(DfmStorageMetadata_t)
+		);
+
+		if (lReadResult != 0)
+		{
+			/* Read failed, reset the buffer and continue */
+			memset(pvBuffer, 0, ulBufferSize);
+			memset(&xWalkData, 0, sizeof(DfmWalkData_t));
+			continue;
+		}
+
+		if (prvVerifyMetadata(&xDfmFlashMetadata, &xWalkData, ulBufferSize) != 0)
+		{
+			/* Start over, this will always happen at the first read, only on failure for subsequent reads */
+			if (xDfmFlashMetadata.usEntryId == 0) {
+				xWalkData.ulCurrentType = xDfmFlashMetadata.ulType;
+				xWalkData.usExpectedEntryId = 0;
+				xWalkData.usExpectedEntryCount = xDfmFlashMetadata.usEntryCount;
+				xWalkData.ulOffset = 0;
+			}
+			else
+			{
+				memset(&xWalkData, 0, sizeof(DfmWalkData_t));
+				continue;
+			}
+		}
+
+		/* Read the actual data */
+		/* TODO: 64bit compatiblity */
+		lReadResult = flash_area_read(
+			pxTraversionState->xEntryCtx.fap,
+			FCB_ENTRY_FA_DATA_OFF(pxTraversionState->xEntryCtx.loc) + sizeof(DfmStorageMetadata_t),
+			(void*)((uint32_t)pvBuffer + xWalkData.ulOffset),
+			xDfmFlashMetadata.ulDataSize
+		);
+
+		if (lReadResult != 0)
+		{
+			/* Read failed, reset the buffer and continue */
+			memset(pvBuffer, 0, ulBufferSize);
+			memset(&xWalkData, 0, sizeof(DfmWalkData_t));
+			continue;
+		}
+
+		xWalkData.usExpectedEntryId++;
+		xWalkData.ulOffset += xDfmFlashMetadata.ulDataSize;
+
+		if (xWalkData.usExpectedEntryId == xWalkData.usExpectedEntryCount)
+		{
+			/* Found the entire alert/payload chunk */
+			return 0;
+		}
 	}
-
-	/* Start by reading the metadata */
-	int lReadResult = flash_area_read(
-		pxTraversionState->xEntryCtx.fap,
-		FCB_ENTRY_FA_DATA_OFF(pxTraversionState->xEntryCtx.loc),
-		&xDfmFlashMetadata,
-		sizeof(DfmStorageMetadata_t)
-	);
-	if (lReadResult != 0)
-	{
-		/* Read failed, not much we can do about that */
-		return -1;
-	}
-
-	if (prvVerifyMetadata(&xDfmFlashMetadata, pxWalkData) != 0) {
-		return -1;
-	}
-
-	if (pxWalkData->usExpectedEntryCount == 0)
-	{
-		/* This is the first entry found */
-		pxWalkData->usExpectedEntryCount = xDfmFlashMetadata.usEntryCount;
-	}
-
-	/* We found the requested type */
-	/* TODO: 64-bit support */
-	lReadResult = flash_area_read(
-		pxTraversionState->xEntryCtx.fap,
-		FCB_ENTRY_FA_DATA_OFF(pxTraversionState->xEntryCtx.loc) + sizeof(DfmStorageMetadata_t),
-		(void*)((uint32_t)pxWalkData->pvBuffer + pxWalkData->ulOffset),
-		xDfmFlashMetadata.ulDataSize
-	);
-	if (lReadResult != 0)
-	{
-		/* Read failed, not much we can do about that, abort */
-		return -1;
-	}
-
-	pxWalkData->usExpectedEntryId++;
-	pxWalkData->ulOffset += xDfmFlashMetadata.ulDataSize;
-
-	/* We've entered a new sector, increase the counter */
-	if (pvStartSector != pxTraversionState->xEntryCtx.loc.fe_sector)
-	{
-		/* Since we've traversed the previous block, we can now rotate it */
-		fcb_rotate(pxFcb);
-	}
-
-	if (pxWalkData->usExpectedEntryId != pxWalkData->usExpectedEntryCount)
-	{
-		/* We haven't found the entire payload */
-		return 0;
-	}
-
-	return 1;
 }
 
 /* This function is used to avoid "unreachable code" warnings */
@@ -321,8 +329,7 @@ DfmResult_t xDfmStoragePortStoreAlert(DfmEntryHandle_t xEntryHandle, uint32_t ul
 
 DfmResult_t xDfmStoragePortGetAlert(void* pvBuffer, uint32_t ulBufferSize)
 {
-	DfmWalkData_t xWalkData = { 0 };
-	int retVal = 0;
+	DfmEntryHandle_t xEntryHandle = 0;
 
 	if (pxStoragePortData == (void*)0)
 	{
@@ -344,26 +351,15 @@ DfmResult_t xDfmStoragePortGetAlert(void* pvBuffer, uint32_t ulBufferSize)
 		return DFM_FAIL;
 	}
 
-	xWalkData.ulType = DFM_STORAGE_PORT_ALERT_TYPE;
-	xWalkData.pvBuffer = pvBuffer;
-	xWalkData.ulBufferSize = ulBufferSize;
-	xWalkData.usExpectedEntryId = 0;
-	xWalkData.usExpectedEntryCount = 0;
-	xWalkData.ulOffset = 0;
-
-	/* Walk until it returns something else than 0. Greater than 0 is success, less than 0 is fail */
-	do
+	while (xDfmEntryCreateAlertFromBuffer(&xEntryHandle) == DFM_FAIL)
 	{
-		retVal = prvDfmFcbWalk(&xFlashCircularBuffer, &xTraversionState, &xWalkData);
-	} while (retVal == 0);
-
-	/* Reset the State, we're done for now. This happens either due to an error or due to that we've reached the end of the buffer */
-	if (retVal == -1)
-	{
-		memset(&xTraversionState, 0, sizeof(struct fcb_entry_ctx));
+		if (prvDfmGetNext(&xFlashCircularBuffer, &xTraversionState, pvBuffer, ulBufferSize) != 0)
+		{
+			return DFM_FAIL;
+		}
 	}
 
-	return retVal > 0 ? DFM_SUCCESS : DFM_FAIL;
+	return DFM_SUCCESS;
 }
 
 DfmResult_t xDfmStoragePortStorePayloadChunk(DfmEntryHandle_t xEntryHandle, uint32_t ulOverwrite)
@@ -373,12 +369,10 @@ DfmResult_t xDfmStoragePortStorePayloadChunk(DfmEntryHandle_t xEntryHandle, uint
 
 DfmResult_t xDfmStoragePortGetPayloadChunk(char* szSessionId, uint32_t ulAlertId, void* pvBuffer, uint32_t ulBufferSize)
 {
-	DfmWalkData_t xWalkData = { 0 };
-	int retVal = 0;
-
 	/* We don't need these to find a payload */
 	(void)szSessionId;
 	(void)ulAlertId;
+	DfmEntryHandle_t xEntryHandle = 0;
 
 	if (pxStoragePortData == (void*)0)
 	{
@@ -400,20 +394,17 @@ DfmResult_t xDfmStoragePortGetPayloadChunk(char* szSessionId, uint32_t ulAlertId
 		return DFM_FAIL;
 	}
 
-	xWalkData.ulType = DFM_STORAGE_PORT_PAYLOAD_TYPE;
-	xWalkData.pvBuffer = pvBuffer;
-	xWalkData.ulBufferSize = ulBufferSize;
-	xWalkData.usExpectedEntryId = 0;
-	xWalkData.usExpectedEntryCount = 0;
-	xWalkData.ulOffset = 0;
-
-	/* Walk until it returns something else than 0. Greater than 0 is success, less than 0 is fail */
-	do
+	if (prvDfmGetNext(&xFlashCircularBuffer, &xTraversionState, pvBuffer, ulBufferSize) != 0)
 	{
-		retVal = prvDfmFcbWalk(&xFlashCircularBuffer, &xTraversionState, &xWalkData);
-	} while (retVal == 0);
+		return DFM_FAIL;
+	}
 
-	return retVal > 0 ? DFM_SUCCESS : DFM_FAIL;
+	if (xDfmEntryCreatePayloadChunkFromBuffer(szSessionId, ulAlertId, &xEntryHandle) == DFM_FAIL)
+	{
+		return DFM_FAIL;
+	}
+
+	return DFM_SUCCESS;
 }
 
 DfmResult_t prvDfmStoragePortWrite(DfmEntryHandle_t xEntryHandle, uint32_t ulType, uint32_t ulOverwrite)
