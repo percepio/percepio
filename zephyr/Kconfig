@@ -20,5 +20,5 @@ endif # PERCEPIO_TRACERECORDER
 
 if PERCEPIO_DFM
 # DFM Kconfig
-#rsource "../DFM/kernelports/Zephyr/Kconfig"
+rsource "../DFM/kernelports/Zephyr/Kconfig"
 endif # PERCEPIO_DFM

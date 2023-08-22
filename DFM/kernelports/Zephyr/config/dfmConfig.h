@@ -22,7 +22,7 @@ extern "C" {
 /**
  * @brief Global flag used to completely exclude all DFM functionality from compilation
  */
-#define DFM_CFG_ENABLED CONFIG_PERCEPIO_DEVALERT
+#define DFM_CFG_ENABLED CONFIG_PERCEPIO_DFM
 
 /**
  * @brief The firmware version. This needs to be set to differentiate the alerts between versions.

@@ -1,8 +1,8 @@
-config PERCEPIO_DEVALERT
-    bool "Enable DevAlert"
-    default n
+if PERCEPIO_DFM
 
-if PERCEPIO_DEVALERT
+if !ENTROPY_GENERATOR
+comment "DFM depends on a random source, please enable the ENTROPY_GENERATOR"
+endif
 
 config PERCEPIO_DFM_CFG_FIRMWARE_VERSION
     string "Firmware version"
@@ -56,6 +56,7 @@ config PERCEPIO_DFM_CFG_STORAGEPORT_NONE
 
 config PERCEPIO_DFM_CFG_STORAGEPORT_FLASH
 	bool "Flash via FCB"
+	depends on (FLASH && FLASH_MAP && FCB)
 	help
 		Storage alerts on flash via the Zephyr FCB module.
 endchoice # choice PERCEPIO_DFM_CFG_STORAGEPORT
@@ -198,5 +199,7 @@ config PERCEPIO_DFM_CFG_ADD_TRACE
 
 endif # PERCEPIO_DFM_ENABLE_COREDUMPS
 
+if PERCEPIO_DFM_CFG_STORAGEPORT_FLASH
 rsource "storageports/Flash/Kconfig"
+endif # PERCEPIO_DFM_CFG_STORAGEPORT_FLASH
 endif # PERCEPIO_DEVALERT
