@@ -15,10 +15,14 @@ config PERCEPIO_DFM
 
 if PERCEPIO_TRACERECORDER
 # Trace Recorder Kconfig
+menu "TraceRecorder"
 rsource "../TraceRecorder/kernelports/Zephyr/Kconfig"
+endmenu
 endif # PERCEPIO_TRACERECORDER
 
 if PERCEPIO_DFM
 # DFM Kconfig
+menu "DevAlert"
 rsource "../DFM/kernelports/Zephyr/Kconfig"
+endmenu
 endif # PERCEPIO_DFM
