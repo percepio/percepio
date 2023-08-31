@@ -1,9 +1,5 @@
 if PERCEPIO_DFM
 
-if !ENTROPY_GENERATOR
-comment "DFM depends on a random source, please enable the ENTROPY_GENERATOR"
-endif
-
 config PERCEPIO_DFM_CFG_FIRMWARE_VERSION
     string "Firmware version"
     default "X.Y.Z"
