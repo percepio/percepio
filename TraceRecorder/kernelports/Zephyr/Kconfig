@@ -3,8 +3,6 @@
 
 if TRACING && PERCEPIO_TRACERECORDER
 
-menu "Percepio Tracealyzer"
-
 menu "RTOS Hidden Settings"
     visible if n
 config PERCEPIO_TRC_CFG_RECORDER_RTOS_ZEPHYR
@@ -35,7 +33,5 @@ endmenu # "RTOS Specific"
 
 # Source recorder common config
 rsource "../../config/Kconfig"
-
-endmenu # "Percepio Tracealyzer"
 
 endif # TRACING && PERCEPIO_TRACERECORDER
