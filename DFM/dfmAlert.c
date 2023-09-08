@@ -672,6 +672,8 @@ static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlert
 		return DFM_FAIL;
 	}
 
+	memset(pvBuffer, 0, ulBufferSize);
+
 	while (xDfmStorageGetAlert(pvBuffer, ulBufferSize) == DFM_SUCCESS)
 	{
 		if (xDfmEntryCreateAlertFromBuffer(&xEntryHandle) == DFM_FAIL)
@@ -705,6 +707,8 @@ static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlert
 			}
 		}
 
+		memset(pvBuffer, 0, ulBufferSize);
+
 		while (xDfmStorageGetPayloadChunk(cSessionIdBuffer, ulAlertId, pvBuffer, ulBufferSize) == DFM_SUCCESS)
 		{
 			if (xDfmEntryCreatePayloadChunkFromBuffer(cSessionIdBuffer , ulAlertId, &xEntryHandle) == DFM_FAIL)
@@ -716,6 +720,7 @@ static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlert
 			{
 				return DFM_FAIL;
 			}
+			memset(pvBuffer, 0, ulBufferSize);
 		}
 	}
 
