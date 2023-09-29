@@ -1319,8 +1319,8 @@ void sys_trace_k_mem_slab_init(struct k_mem_slab *slab, void *buffer, size_t blo
 		ret == 0 ? PSF_EVENT_MEMORY_SLAB_INIT_SUCCESS : PSF_EVENT_MEMORY_SLAB_INIT_FAILURE,
 		(TraceUnsignedBaseType_t)slab,
 		(TraceUnsignedBaseType_t)slab->buffer,
-		(TraceUnsignedBaseType_t)slab->block_size,
-		(TraceUnsignedBaseType_t)slab->num_blocks,
+		(TraceUnsignedBaseType_t)slab->info.block_size,
+		(TraceUnsignedBaseType_t)slab->info.num_blocks,
 		(TraceUnsignedBaseType_t)ret
 	);
 }
@@ -1341,7 +1341,7 @@ void sys_trace_k_mem_slab_alloc_exit(struct k_mem_slab *slab, void **mem, k_time
 			(TraceUnsignedBaseType_t)mem,
 			(TraceUnsignedBaseType_t)timeout.ticks,
 			(TraceUnsignedBaseType_t)ret,
-			(TraceUnsignedBaseType_t)slab->num_blocks
+			(TraceUnsignedBaseType_t)slab->info.num_blocks
 		);
 	} else if (ret == -ENOMEM || ret == -EAGAIN) {
 		(void)xTraceEventCreate4(
@@ -1363,7 +1363,7 @@ void sys_trace_k_mem_slab_alloc_exit(struct k_mem_slab *slab, void **mem, k_time
 }
 
 void sys_trace_k_mem_slab_free_exit(struct k_mem_slab *slab, void **mem) {
-	(void)xTraceEventCreate3(PSF_EVENT_MEMORY_SLAB_FREE, (TraceUnsignedBaseType_t)slab, (TraceUnsignedBaseType_t)mem, (TraceUnsignedBaseType_t)slab->num_blocks);
+	(void)xTraceEventCreate3(PSF_EVENT_MEMORY_SLAB_FREE, (TraceUnsignedBaseType_t)slab, (TraceUnsignedBaseType_t)mem, (TraceUnsignedBaseType_t)slab->info.num_blocks);
 }
 
 
