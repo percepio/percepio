@@ -55,7 +55,7 @@ static char* prvGetFileNameFromPath(char* szPath)
 static uint32_t prvCalculateChecksum(char *ptr, size_t maxlen)
 {
 	uint32_t chksum = 0;
-	int i = 0;
+	size_t i = 0;
 
 	if (ptr == NULL)
 	{
