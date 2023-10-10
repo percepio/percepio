@@ -19,7 +19,7 @@
 
 #if ((DFM_CFG_CRASH_ADD_TRACE) >= 1)
 #include <trcRecorder.h>
-static void prvAddTracePayload();
+static void prvAddTracePayload(void);
 #endif
 
 /* See https://developer.arm.com/documentation/dui0552/a/cortex-m3-peripherals/system-control-block/configurable-fault-status-register*/
@@ -173,7 +173,7 @@ void CrashCatcher_DumpStart(const CrashCatcherInfo* pInfo)
 }
 
 #if ((DFM_CFG_CRASH_ADD_TRACE) >= 1)
-static void prvAddTracePayload()
+static void prvAddTracePayload(void)
 {
 	char* szName;
 	void* pvBuffer = (void*)0;
