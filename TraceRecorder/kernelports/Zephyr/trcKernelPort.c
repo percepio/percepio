@@ -1228,21 +1228,6 @@ void sys_trace_k_pipe_get_exit(struct k_pipe *pipe, void *data, size_t bytes_to_
 	(void)xTraceEventCreate2(ret == 0 ? PSF_EVENT_PIPE_GET_SUCCESS : PSF_EVENT_PIPE_GET_TIMEOUT, (TraceUnsignedBaseType_t)pipe, (TraceUnsignedBaseType_t)ret);
 }
 
-void sys_trace_k_pipe_block_put_enter(struct k_pipe *pipe, struct k_mem_block *block, size_t size, struct k_sem *sem) {
-	(void)xTraceEventCreate4(
-		PSF_EVENT_PIPE_BLOCK_PUT_ENTER,
-		(TraceUnsignedBaseType_t)pipe,
-		(TraceUnsignedBaseType_t)block,
-		(TraceUnsignedBaseType_t)size,
-		(TraceUnsignedBaseType_t)sem
-	);
-}
-
-void sys_trace_k_pipe_block_put_exit(struct k_pipe *pipe, struct k_mem_block *block, size_t size, struct k_sem *sem) {
-	(void)xTraceEventCreate1(PSF_EVENT_PIPE_BLOCK_PUT_EXIT, (TraceUnsignedBaseType_t)pipe);
-}
-
-
 /* Memory heap trace function definitions */
 void sys_trace_k_heap_init(struct k_heap *h, void *mem, size_t bytes) {
 	(void)xTraceEventCreate3(PSF_EVENT_KHEAP_INIT, (TraceUnsignedBaseType_t)h, (TraceUnsignedBaseType_t)mem, (TraceUnsignedBaseType_t)bytes);
