@@ -14,7 +14,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/crc.h>
 
-extern bool globFailRun;
 static DfmCloudPortData_t* pxCloudPortData = (void*)0;
 
 static uint16_t prvPrintDataAsHex(uint16_t seed, uint8_t* data, uint32_t size)
@@ -89,11 +88,6 @@ DfmResult_t xDfmCloudPortInitialize(DfmCloudPortData_t* pxBuffer)
 
 DfmResult_t xDfmCloudPortSendAlert(DfmEntryHandle_t xEntryHandle)
 {
-	//Simulate failing chunk sends to use the storage
-	if (globFailRun) {
-		printk("Ooops, couldn't send over serial, I better store it in buffer\n");
-		return DFM_FAIL;
-	}
 	return prvSerialPortUploadEntry(xEntryHandle);
 }
 
