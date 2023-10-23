@@ -135,10 +135,11 @@ DfmResult_t xDfmSessionEnable(uint32_t ulOverride)
 	if ((ulStoredEnabledValue == DFM_SESSION_STORAGE_DUMMY_VALUE) || ((ulOverride == 1UL) && (ulStoredEnabledValue == DFM_DISABLED)))
 	{
 		/* Couldn't read stored value or we override a disabled value */
-		((DfmSessionStorage_t*)cSessionStorageBuffer)->ulVersion = DFM_SESSION_STORAGE_VERSION; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
-		((DfmSessionStorage_t*)cSessionStorageBuffer)->ulEnabled = DFM_ENABLED; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
+		DfmSessionStorage_t *pSessionStorageBuffer = (DfmSessionStorage_t*)&cSessionStorageBuffer[0];
+		pSessionStorageBuffer->ulVersion = DFM_SESSION_STORAGE_VERSION; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
+		pSessionStorageBuffer->ulEnabled = DFM_ENABLED; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
 
-		(void)xDfmStorageStoreSession(cSessionStorageBuffer, sizeof(DfmSessionStorage_t)); /* Attempt to store the session info. We can't really do anything if it fails. */
+		(void)xDfmStorageStoreSession(pSessionStorageBuffer, sizeof(DfmSessionStorage_t)); /* Attempt to store the session info. We can't really do anything if it fails. */
 
 		ulStoredEnabledValue = DFM_ENABLED;
 	}
@@ -182,12 +183,13 @@ DfmResult_t xDfmSessionDisable(uint32_t ulRemember)
 	if (ulStoredEnabledValue != DFM_DISABLED)
 	{
 		/* We didn't find disabled */
-		((DfmSessionStorage_t*)cSessionStorageBuffer)->ulVersion = DFM_SESSION_STORAGE_VERSION; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
-		((DfmSessionStorage_t*)cSessionStorageBuffer)->ulEnabled = DFM_DISABLED; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
+		DfmSessionStorage_t *pSessionStorage = (DfmSessionStorage_t*)&cSessionStorageBuffer[0];
+		pSessionStorage->ulVersion = DFM_SESSION_STORAGE_VERSION; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
+		pSessionStorage->ulEnabled = DFM_DISABLED; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
 
 		if (ulRemember != 0UL)
 		{
-			(void)xDfmStorageStoreSession(cSessionStorageBuffer, sizeof(DfmSessionStorage_t)); /* Attempt to store the session info. We can't really do anything if it fails. */
+			(void)xDfmStorageStoreSession(pSessionStorage, sizeof(DfmSessionStorage_t)); /* Attempt to store the session info. We can't really do anything if it fails. */
 		}
 	}
 
