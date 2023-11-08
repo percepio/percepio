@@ -12,7 +12,7 @@
 #define TRC_KERNEL_PORT_H
 
 #include <zephyr/kernel.h>
-#include <version.h>
+#include <zephyr/version.h>
 #include <trcRecorder.h>
 
 #ifdef __cplusplus
