@@ -170,7 +170,7 @@ endchoice # choice "PERCEPIO_DFM_CFG_SELECTED_SESSIONID_STRATEGY"
 
 endmenu # menu "Strategy Settings"
 
-menuconfig PERCEPIO_DFM_CFG_RETAINED_MEMORY
+config PERCEPIO_DFM_CFG_RETAINED_MEMORY
 	bool "Retained Memory support"
 	depends on (RETAINED_MEM && RETENTION)
 	help
@@ -183,7 +183,7 @@ menuconfig PERCEPIO_DFM_CFG_RETAINED_MEMORY
 		you might have to disable the mutex usage protecting this memory
 		in order to write to it (such as writing from a hardfault context).
 
-menuconfig PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
+config PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
 	bool "Enable Core Dump support"
 	default n
 	depends on (DEBUG_COREDUMP && DEBUG_COREDUMP_BACKEND_OTHER && DEBUG_COREDUMP_MEMORY_DUMP_MIN)
