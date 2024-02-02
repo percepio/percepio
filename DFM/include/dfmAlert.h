@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -192,14 +192,30 @@ DfmResult_t xDfmAlertReset(DfmAlertHandle_t xAlertHandle);
 DfmResult_t xDfmAlertBegin(uint32_t ulAlertType, const char* szAlertDescription, DfmAlertHandle_t* pxAlertHandle);
 
 /**
- * @brief Ends Alert creation and sends/stores it
+ * @brief Ends Alert creation and attempts to send, store or retain it, in that order.
  *
  * @param[in] xAlertHandle Alert handle.
- *
+ * 
  * @retval DFM_FAIL Failure
  * @retval DFM_SUCCESS Success
  */
-DfmResult_t xDfmAlertEnd(DfmAlertHandle_t xAlertHandle);
+#define xDfmAlertEnd(xAlertHandle) xDfmAlertEndCustom(xAlertHandle, DFM_ALERT_END_TYPE_ALL)
+
+/**
+ * @brief Ends Alert creation and sends, stores or retains it depending on the supplied ulEndType parameter.
+ * The values can be combined to only attempt the appropriate types but the order will always be Send before Store before Retain.
+ *
+ * @param[in] xAlertHandle Alert handle.
+ * @param[in] ulEndType The type of commits to be attempted by the function.
+ * 						DFM_ALERT_END_TYPE_ALL: Send, store or retain the Alert, in that order.
+ * 						DFM_ALERT_END_TYPE_SEND: Send the Alert.
+ * 						DFM_ALERT_END_TYPE_STORE: Store the Alert.
+ * 						DFM_ALERT_END_TYPE_RETAIN: Retain the Alert.
+ * 
+ * @retval DFM_FAIL Failure
+ * @retval DFM_SUCCESS Success
+ */
+DfmResult_t xDfmAlertEndCustom(DfmAlertHandle_t xAlertHandle, uint32_t ulEndType);
 
 /**
  * @brief Ends Alert creation by only storing it
@@ -210,6 +226,16 @@ DfmResult_t xDfmAlertEnd(DfmAlertHandle_t xAlertHandle);
  * @retval DFM_SUCCESS Success
  */
 DfmResult_t xDfmAlertEndOffline(DfmAlertHandle_t xAlertHandle);
+
+/**
+ * @brief Ends Alert creation by only storing it in retained memory
+ *
+ * @param[in] xAlertHandle Alert handle.
+ *
+ * @retval DFM_FAIL Failure
+ * @retval DFM_SUCCESS Success
+ */
+DfmResult_t xDfmAlertEndRetainedMemory(DfmAlertHandle_t xAlertHandle);
 
 /**
  * @brief Add Symptom to Alert
@@ -286,6 +312,14 @@ DfmResult_t xDfmAlertGetType(DfmAlertHandle_t xAlertHandle, uint32_t* pulAlertTy
 DfmResult_t xDfmAlertGetDescription(DfmAlertHandle_t xAlertHandle, const char** pszAlertDescription);
 
 /**
+* @brief Store any alerts in Retained Memory
+ *
+ * @retval DFM_FAIL Failure
+ * @retval DFM_SUCCESS Success
+ */
+DfmResult_t xDfmAlertStoreRetainedMemory(void);
+
+/**
 * @brief Send all stored Alerts
  *
  * @retval DFM_FAIL Failure
@@ -308,22 +342,25 @@ DfmResult_t xDfmAlertGetAll(DfmAlertEntryCallback_t xCallback);
 #else
 
 /* Dummy defines */
-#define xDfmAlertGetVersion(xAlertHandle, pucVersion)
-#define xDfmAlertGetId(xAlertHandle, pulAlertId)
-#define xDfmAlertGetProduct(xAlertHandle, pulProduct)
-#define xDfmAlertGetFirmwareVersion(xAlertHandle, pszFirmwareVersion)
-#define xDfmAlertReset(xAlertHandle)
-#define xDfmAlertBegin(ulAlertType, szAlertDescription, pxAlertHandle)
-#define xDfmAlertEnd(xAlertHandle)
-#define xDfmAlertAddSymptom(xAlertHandle, ulSymptomId, ulValue)
-#define xDfmAlertGetSymptom(xAlertHandle, ulIndex, pulSymptomId, pulValue)
-#define xDfmAlertAddPayload(xAlertHandle, pvData, ulSize, szDescription)
-#define xDfmAlertAddTracePayload(xAlertHandle)
-#define xDfmAlertGetPayload(xAlertHandle, ulIndex, ppvData, pulSize, pszDescription)
-#define xDfmAlertGetType(xAlertHandle, pulAlertType)
-#define xDfmAlertGetDescription(xAlertHandle, pszAlertDescription)
-#define xDfmAlertSendAll()
-#define xDfmAlertGetAll(xCallback)
+#define xDfmAlertGetVersion(xAlertHandle, pucVersion) ((void)(xAlertHandle), (void)(pucVersion), DFM_FAIL)
+#define xDfmAlertGetId(xAlertHandle, pulAlertId) ((void)(xAlertHandle), (void)(pulAlertId), DFM_FAIL)
+#define xDfmAlertGetProduct(xAlertHandle, pulProduct) ((void)(xAlertHandle), (void)(pulProduct), DFM_FAIL)
+#define xDfmAlertGetFirmwareVersion(xAlertHandle, pszFirmwareVersion) ((void)(xAlertHandle), (void)(pszFirmwareVersion), DFM_FAIL)
+#define xDfmAlertReset(xAlertHandle) ((void)(xAlertHandle), DFM_FAIL)
+#define xDfmAlertBegin(ulAlertType, szAlertDescription, pxAlertHandle) ((void)(ulAlertType), (void)(szAlertDescription), (void)(pxAlertHandle), DFM_FAIL)
+#define xDfmAlertEnd(xAlertHandle) ((void)(xAlertHandle), DFM_FAIL)
+#define xDfmAlertEndOffline(xAlertHandle ((void)(xAlertHandle), DFM_FAIL)
+#define xDfmAlertEndRetainedMemory(xAlertHandle) ((void)(xAlertHandle), DFM_FAIL)
+#define xDfmAlertAddSymptom(xAlertHandle, ulSymptomId, ulValue) ((void)(xAlertHandle), (void)(ulSymptomId), (void)(ulValue), DFM_FAIL)
+#define xDfmAlertGetSymptom(xAlertHandle, ulIndex, pulSymptomId, pulValue) ((void)(xAlertHandle), (void)(ulIndex), (void)(pulSymptomId), (void)(pulValue), DFM_FAIL)
+#define xDfmAlertAddPayload(xAlertHandle, pvData, ulSize, szDescription) ((void)(xAlertHandle), (void)(pvData), (void)(ulSize), (void)(szDescription), DFM_FAIL)
+#define xDfmAlertAddTracePayload(xAlertHandle) ((void)(xAlertHandle), DFM_FAIL)
+#define xDfmAlertGetPayload(xAlertHandle, ulIndex, ppvData, pulSize, pszDescription) ((void)(xAlertHandle), (void)(ulIndex), (void)(ppvData), (void)(pulSize), (void)(pszDescription), DFM_FAIL)
+#define xDfmAlertGetType(xAlertHandle, pulAlertType) ((void)(xAlertHandle), (void)(pulAlertType), DFM_FAIL)
+#define xDfmAlertGetDescription(xAlertHandle, pszAlertDescription) ((void)(xAlertHandle), (void)(pszAlertDescription), DFM_FAIL)
+#define xDfmAlertStoreRetainedMemory() (DFM_FAIL)
+#define xDfmAlertSendAll() (DFM_FAIL)
+#define xDfmAlertGetAll(xCallback) ((void)(xCallback), DFM_FAIL)
 
 #endif
 

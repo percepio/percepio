@@ -1,0 +1,13 @@
+# Copyright (c) 2021 Percepio AB
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Filesystem Config"
+
+config PERCEPIO_DFM_CFG_STORAGE_PORT_FILESYSTEM_PATH
+    string "Alert storage path"
+    default "/dfm"
+    help
+        Specifies where to store DFM Alerts. DFM will create a directory called "alerts" in the
+        specified path upon initialization.
+
+endmenu # menu "FCB Config"

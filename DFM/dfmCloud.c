@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -189,13 +189,13 @@ DfmResult_t xDfmCloudGenerateMQTTTopic(char* cTopicBuffer, uint32_t ulBufferSize
 	switch (usType)
 	{
 	case DFM_ENTRY_TYPE_ALERT:
-		lRetVal = snprintf(cTopicBuffer, ulBufferSize, "%sDevAlert/%s/%s/%ld/%d-%d_da_header", szMQTTPrefix, szDeviceName, szSessionId, ulAlertId, usChunkIndex, usChunkCount);
+		lRetVal = snprintf(cTopicBuffer, ulBufferSize, "%sDevAlert/%s/%s/%u/%u-%u_da_header", szMQTTPrefix, szDeviceName, szSessionId, (unsigned int)ulAlertId, (unsigned int)usChunkIndex, (unsigned int)usChunkCount);
 		break;
 	case DFM_ENTRY_TYPE_PAYLOAD_HEADER:
-		lRetVal = snprintf(cTopicBuffer, ulBufferSize, "%sDevAlert/%s/%s/%ld/%d-%d_da_payload%d_header", szMQTTPrefix, szDeviceName, szSessionId, ulAlertId, usChunkIndex, usChunkCount, usEntryId);
+		lRetVal = snprintf(cTopicBuffer, ulBufferSize, "%sDevAlert/%s/%s/%u/%u-%u_da_payload%u_header", szMQTTPrefix, szDeviceName, szSessionId, (unsigned int)ulAlertId, (unsigned int)usChunkIndex, (unsigned int)usChunkCount, (unsigned int)usEntryId);
 		break;
 	case DFM_ENTRY_TYPE_PAYLOAD:
-		lRetVal = snprintf(cTopicBuffer, ulBufferSize, "%sDevAlert/%s/%s/%ld/%d-%d_da_payload%d", szMQTTPrefix, szDeviceName, szSessionId, ulAlertId, usChunkIndex, usChunkCount, usEntryId);
+		lRetVal = snprintf(cTopicBuffer, ulBufferSize, "%sDevAlert/%s/%s/%u/%u-%u_da_payload%u", szMQTTPrefix, szDeviceName, szSessionId, (unsigned int)ulAlertId, (unsigned int)usChunkIndex, (unsigned int)usChunkCount, (unsigned int)usEntryId);
 		break;
 	default:
 		return DFM_FAIL;

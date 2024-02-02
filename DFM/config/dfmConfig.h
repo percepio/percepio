@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -77,6 +77,11 @@ extern "C" {
  * @brief A value that will be used to create a delay between transfers. Was necessary in certain situations.
  */
 #define DFM_CFG_DELAY_BETWEEN_SEND (0)
+
+/**
+ * @brief Enables the Retained Memory feature. Requires a RetainedMemoryPort to be implemented for the kernel/hardware.
+ */
+#define DFM_CFG_RETAINED_MEMORY 0
 
 /**
  * @brief The strategy used for storing alerts/payload. Possible values are:

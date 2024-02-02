@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -17,13 +17,16 @@
 
 #include <stdint.h>
 #include <dfmTypes.h>
+#include <dfm.h>
+
+#if ((DFM_CFG_ENABLED) >= 1)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup dfm_cloud_port_dummy_apis DFM dummy Cloud port API
+ * @defgroup dfm_cloud_port_dummy_apis DFM Dummy Cloud port API
  * @ingroup dfm_apis
  * @{
  */
@@ -70,6 +73,8 @@ DfmResult_t xDfmCloudPortSendPayloadChunk(DfmEntryHandle_t xEntryHandle);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

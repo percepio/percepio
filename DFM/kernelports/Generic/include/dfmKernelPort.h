@@ -9,7 +9,7 @@
 /**
  * @file
  *
- * @brief DFM FreeRTOS Kernel port API
+ * @brief DFM Generic Kernel port API
  */
 
 #ifndef DFM_KERNEL_PORT_H
@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup dfm_kernel_port_freertos_apis DFM FreeRTOS Kernel port API
+ * @defgroup dfm_kernel_port_generic_apis DFM Generic Kernel port API
  * @ingroup dfm_apis
  * @{
  */

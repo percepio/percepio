@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -66,7 +66,6 @@ static uint32_t prvPrintDataAsHex(uint8_t* data, int size)
 
 static DfmResult_t prvSerialPortUploadEntry(DfmEntryHandle_t xEntryHandle)
 {
-	void* dataptr;
 	uint32_t checksum;
 	uint32_t datalen;
 
@@ -97,7 +96,7 @@ static DfmResult_t prvSerialPortUploadEntry(DfmEntryHandle_t xEntryHandle)
 	DFM_CFG_UNLOCK_SERIAL();
 
 	checksum = 0; // Make sure to clear this
-	checksum += prvPrintDataAsHex((uint8_t*)dataptr, datalen);
+	checksum += prvPrintDataAsHex((uint8_t*)xEntryHandle, datalen);
 
 	snprintf(pxCloudPortData->buf, sizeof(pxCloudPortData->buf), "[[ DevAlert Data Ended. Checksum: %d ]]\n", (unsigned int)0);
 
