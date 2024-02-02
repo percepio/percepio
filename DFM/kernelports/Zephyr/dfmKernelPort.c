@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -10,6 +10,7 @@
 
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
+#include <zephyr/sys/reboot.h>
 #include <dfm.h>
 
 #if DFM_CFG_ENABLE_COREDUMPS == 1
@@ -21,6 +22,10 @@
 #include <dfmConfig.h>
 
 #if ((DFM_CFG_ENABLED) == 1)
+
+#if (defined(CONFIG_PERCEPIO_DFM_CFG_COREDUMP_RETAIN) && CONFIG_PERCEPIO_DFM_CFG_COREDUMP_RETAIN == 1) && !(defined(CONFIG_PERCEPIO_DFM_CFG_RETAINED_MEMORY) && CONFIG_PERCEPIO_DFM_CFG_RETAINED_MEMORY == 1)
+#error "DFM is configured to store Core Dumps in Retained Memory but that isn't enabled in DFM."
+#endif
 
 #define MAX_COREDUMP_PARTS 4
 
@@ -43,7 +48,7 @@ DfmResult_t xDfmKernelPortGetCurrentTaskName(char** pszTaskName)
 {
 	//TODO: Possbily add additional checking here
 	k_tid_t current_thread = k_current_get();
-	*pszTaskName = k_thread_name_get(current_thread);
+	*pszTaskName = (char*)k_thread_name_get(current_thread);
 	return DFM_SUCCESS;
 }
 
@@ -248,9 +253,15 @@ static void xDfmCoredumpBackendEnd(void)
 #if defined(CONFIG_PERCEPIO_DFM_CFG_ADD_TRACE) && CONFIG_PERCEPIO_DFM_CFG_ADD_TRACE == 1
 		xDfmAlertAddTrace(xAlertHandle);
 #endif
-		xDfmAlertEnd(xAlertHandle);
+
+#if defined(CONFIG_PERCEPIO_DFM_CFG_COREDUMP_RETAIN) && CONFIG_PERCEPIO_DFM_CFG_COREDUMP_RETAIN == 1
+		xDfmAlertEndCustom(xAlertHandle, DFM_ALERT_END_TYPE_RETAIN);
+#elif defined(CONFIG_PERCEPIO_DFM_CFG_COREDUMP_STORE) && CONFIG_PERCEPIO_DFM_CFG_COREDUMP_STORE == 1
+		xDfmAlertEndCustom(xAlertHandle, DFM_ALERT_END_TYPE_STORE);
+#endif
 	}
 
+	sys_reboot(SYS_REBOOT_COLD);
 }
 
 static int xDfmCoredumpBackendCmd(enum coredump_cmd_id eCmdId, void *arg)

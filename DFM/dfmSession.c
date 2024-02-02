@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -98,8 +98,9 @@ DfmResult_t xDfmSessionInitialize(DfmSessionData_t* pxBuffer)
 
 DfmResult_t xDfmSessionEnable(uint32_t ulOverride)
 {
-	uint8_t cSessionStorageBuffer[8] = {0}; /* This must be large enough to hold all previous versions of DfmSessionStorage_t */
+	uint8_t cSessionStorageBuffer[8] = { 0 }; /* This must be large enough to hold all previous versions of DfmSessionStorage_t */
 	uint32_t ulStoredEnabledValue = DFM_SESSION_STORAGE_DUMMY_VALUE;
+	DfmSessionStorage_t* pxSessionStorage = (DfmSessionStorage_t*)cSessionStorageBuffer; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
 
 	if (pxDfmSessionData == (void*)0)
 	{
@@ -135,10 +136,10 @@ DfmResult_t xDfmSessionEnable(uint32_t ulOverride)
 	if ((ulStoredEnabledValue == DFM_SESSION_STORAGE_DUMMY_VALUE) || ((ulOverride == 1UL) && (ulStoredEnabledValue == DFM_DISABLED)))
 	{
 		/* Couldn't read stored value or we override a disabled value */
-		((DfmSessionStorage_t*)cSessionStorageBuffer)->ulVersion = DFM_SESSION_STORAGE_VERSION; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
-		((DfmSessionStorage_t*)cSessionStorageBuffer)->ulEnabled = DFM_ENABLED; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
+		pxSessionStorage->ulVersion = DFM_SESSION_STORAGE_VERSION;
+		pxSessionStorage->ulEnabled = DFM_ENABLED;
 
-		(void)xDfmStorageStoreSession(cSessionStorageBuffer, sizeof(DfmSessionStorage_t)); /* Attempt to store the session info. We can't really do anything if it fails. */
+		(void)xDfmStorageStoreSession(pxSessionStorage, sizeof(DfmSessionStorage_t)); /* Attempt to store the session info. We can't really do anything if it fails. */
 
 		ulStoredEnabledValue = DFM_ENABLED;
 	}
@@ -158,6 +159,7 @@ DfmResult_t xDfmSessionDisable(uint32_t ulRemember)
 {
 	uint8_t cSessionStorageBuffer[8] = { 0 }; /* This must be large enough to hold all previous versions of DfmSessionStorage_t */
 	uint32_t ulStoredEnabledValue = DFM_SESSION_STORAGE_DUMMY_VALUE;
+	DfmSessionStorage_t* pxSessionStorage = (DfmSessionStorage_t*)cSessionStorageBuffer; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
 
 	if (pxDfmSessionData == (void*)0)
 	{
@@ -182,12 +184,12 @@ DfmResult_t xDfmSessionDisable(uint32_t ulRemember)
 	if (ulStoredEnabledValue != DFM_DISABLED)
 	{
 		/* We didn't find disabled */
-		((DfmSessionStorage_t*)cSessionStorageBuffer)->ulVersion = DFM_SESSION_STORAGE_VERSION; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
-		((DfmSessionStorage_t*)cSessionStorageBuffer)->ulEnabled = DFM_DISABLED; /*cstat !MISRAC2012-Rule-11.3 We use an untyped buffer to retrieve the session data since we can't know what version and size it might have been stored in the past. The stored Session data might be larger than the current DfmSessionStorage_t*/
+		pxSessionStorage->ulVersion = DFM_SESSION_STORAGE_VERSION;
+		pxSessionStorage->ulEnabled = DFM_DISABLED;
 
 		if (ulRemember != 0UL)
 		{
-			(void)xDfmStorageStoreSession(cSessionStorageBuffer, sizeof(DfmSessionStorage_t)); /* Attempt to store the session info. We can't really do anything if it fails. */
+			(void)xDfmStorageStoreSession(pxSessionStorage, sizeof(DfmSessionStorage_t)); /* Attempt to store the session info. We can't really do anything if it fails. */
 		}
 	}
 

@@ -1,43 +1,21 @@
-/*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
- * www.percepio.com
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
-/**
- * @file
- *
- * @brief DFM Flash Storage port API
- */
-
 #ifndef DFM_STORAGE_PORT_H
 #define DFM_STORAGE_PORT_H
 
 #include <stdint.h>
 #include <dfmConfig.h>
-#include <dfmStoragePortConfig.h>
+// #include <dfmStoragePortConfig.h>
 #include <dfmTypes.h>
-
-#if (defined(DFM_CFG_ENABLED) && (DFM_CFG_ENABLED >= 1))
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @defgroup dfm_storage_port_flash_apis DFM Dummy Storage port API
- * @ingroup dfm_apis
- * @{
- */
+#if (defined(DFM_CFG_ENABLED) && (DFM_CFG_ENABLED >= 1))
 
-/**
- * @brief Storage port system data
- */
 typedef struct DfmStoragePortData
 {
-	uint32_t ulInitialized;
+    uint32_t ulInitialized;
+    uint32_t ulOngoingTraversal;
 } DfmStoragePortData_t;
 
 /**
@@ -126,12 +104,10 @@ DfmResult_t xDfmStoragePortGetPayloadChunk(char* szSessionId, uint32_t ulAlertId
  */
 DfmResult_t xDfmStoragePortReset(void);
 
-/** @} */
+#endif
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif
 
 #endif

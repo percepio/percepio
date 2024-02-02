@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -253,10 +253,9 @@ DfmResult_t xDfmStorageGetPayloadChunk(char* szSessionId, uint32_t ulAlertId, vo
 	{
 		return DFM_FAIL;
 	}
-
-	/* TODO: 64-bit compatible */
+	
 	/* Make sure szSessiondId is not pointing to a string inside the buffer since that means this function is incorrectly used and it will be overwritten! */
-	if (((uint32_t)szSessionId >= (uint32_t)pvBuffer) && ((uint32_t)szSessionId < (((uint32_t)pvBuffer) + ulBufferSize))) /*cstat !MISRAC2012-Rule-11.6 !MISRAC2012-Rule-18.3 !MISRAC2012-Rule-18.4 We need to verify that szSessionId is not pointing at an address inside pvBuffer. This means that we need to offset the buffer pointer by the buffer size before comparison.*/
+	if (((uintptr_t)szSessionId >= (uintptr_t)pvBuffer) && ((uintptr_t)szSessionId < (((uintptr_t)pvBuffer) + (uintptr_t)ulBufferSize))) /*cstat !MISRAC2012-Rule-11.6 !MISRAC2012-Rule-18.3 !MISRAC2012-Rule-18.4 We need to verify that szSessionId is not pointing at an address inside pvBuffer. This means that we need to offset the buffer pointer by the buffer size before comparison.*/
 	{
 		return DFM_FAIL;
 	}
