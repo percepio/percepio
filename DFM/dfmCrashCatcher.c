@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -19,7 +19,7 @@
 
 #if ((DFM_CFG_CRASH_ADD_TRACE) >= 1)
 #include <trcRecorder.h>
-static void prvAddTracePayload();
+static void prvAddTracePayload(void);
 #endif
 
 /* See https://developer.arm.com/documentation/dui0552/a/cortex-m3-peripherals/system-control-block/configurable-fault-status-register*/
@@ -55,7 +55,7 @@ static char* prvGetFileNameFromPath(char* szPath)
 static uint32_t prvCalculateChecksum(char *ptr, size_t maxlen)
 {
 	uint32_t chksum = 0;
-	int i = 0;
+	size_t i = 0;
 
 	if (ptr == NULL)
 	{
@@ -173,7 +173,7 @@ void CrashCatcher_DumpStart(const CrashCatcherInfo* pInfo)
 }
 
 #if ((DFM_CFG_CRASH_ADD_TRACE) >= 1)
-static void prvAddTracePayload()
+static void prvAddTracePayload(void)
 {
 	char* szName;
 	void* pvBuffer = (void*)0;

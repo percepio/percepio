@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -77,6 +77,13 @@ DfmResult_t xDfmInitialize(DfmUserCallback_t xGetUniqueSessionID, DfmUserCallbac
 	{
 		return DFM_FAIL;
 	}
+
+#if (defined(DFM_CFG_RETAINED_MEMORY) && (DFM_CFG_RETAINED_MEMORY >= 1))
+	if (xDfmRetainedMemoryInitialize(&pxDfmData->xRetainedMemoryData) == DFM_FAIL)
+	{
+		return DFM_FAIL;
+	}
+#endif
 
 	pxDfmData->ulDfmInitialized = 1;
 

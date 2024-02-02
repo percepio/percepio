@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -43,4 +43,4 @@
  */
 #define DFM_CFG_UNLOCK_SERIAL()
 
-#endif //UNITTEST_DFMCLOUDPORTCONFIG_H
+#endif

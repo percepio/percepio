@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -24,6 +24,21 @@ static DfmResult_t prvSendAlert(DfmEntryHandle_t xEntryHandle);
 static DfmResult_t prvSendPayloadChunk(DfmEntryHandle_t xEntryHandle);
 
 DfmAlertData_t* pxDfmAlertData = (void*)0;
+
+#if defined(DFM_CFG_RETAINED_MEMORY) && (DFM_CFG_RETAINED_MEMORY >= 1)
+static DfmResult_t prvStoreRetainedMemoryAlert(DfmEntryHandle_t xEntryHandle)
+{
+	return xDfmRetainedMemoryWriteAlert(xEntryHandle);
+}
+
+static DfmResult_t prvStoreRetainedMemoryPayloadChunk(DfmEntryHandle_t xEntryHandle)
+{
+	/* We don't care if payload stuff fails */
+	(void)xDfmRetainedMemoryWritePayloadChunk(xEntryHandle);
+
+	return DFM_SUCCESS;
+}
+#endif
 
 static DfmResult_t prvStoreAlert(DfmEntryHandle_t xEntryHandle)
 {
@@ -488,7 +503,7 @@ DfmResult_t xDfmAlertGetDescription(DfmAlertHandle_t xAlertHandle, const char** 
 	return DFM_SUCCESS;
 }
 
-DfmResult_t xDfmAlertEnd(DfmAlertHandle_t xAlertHandle)
+DfmResult_t xDfmAlertEndCustom(DfmAlertHandle_t xAlertHandle, uint32_t ulEndType)
 {
 	DfmAlert_t* pxAlert = (DfmAlert_t*)xAlertHandle;
 
@@ -514,63 +529,43 @@ DfmResult_t xDfmAlertEnd(DfmAlertHandle_t xAlertHandle)
 
 	pxAlert->ulChecksum = prvDfmAlertCalculateChecksum((uint8_t*)pxAlert, sizeof(DfmAlert_t) - sizeof(uint32_t));
 
-	/* Try to send */
-	if (prvDfmProcessAlert(prvSendAlert, prvSendPayloadChunk) == DFM_SUCCESS)
+	if ((ulEndType & DFM_ALERT_END_TYPE_SEND) > 0)
 	{
-		prvDfmAlertReset(pxAlert);
+		/* Try to send */
+		if (prvDfmProcessAlert(prvSendAlert, prvSendPayloadChunk) == DFM_SUCCESS)
+		{
+			prvDfmAlertReset(pxAlert);
 
-		return DFM_SUCCESS;
+			return DFM_SUCCESS;
+		}
 	}
 
-	/* Try to store */
-	if (prvDfmProcessAlert(prvStoreAlert, prvStorePayloadChunk) == DFM_SUCCESS)
+	if ((ulEndType & DFM_ALERT_END_TYPE_STORE) > 0)
 	{
-		prvDfmAlertReset(pxAlert);
+		/* Try to store */
+		if (prvDfmProcessAlert(prvStoreAlert, prvStorePayloadChunk) == DFM_SUCCESS)
+		{
+			prvDfmAlertReset(pxAlert);
 
-		return DFM_SUCCESS;
+			return DFM_SUCCESS;
+		}
 	}
+
+
+#if (defined(DFM_CFG_RETAINED_MEMORY) && (DFM_CFG_RETAINED_MEMORY >= 1))
+	if ((ulEndType & DFM_ALERT_END_TYPE_RETAIN) > 0)
+	{
+		/* Try to store in retained memory*/
+		if (prvDfmProcessAlert(prvStoreRetainedMemoryAlert, prvStoreRetainedMemoryPayloadChunk) == DFM_SUCCESS)
+		{
+			prvDfmAlertReset(pxAlert);
+
+			return DFM_SUCCESS;
+		}
+	}
+#endif
 
 	/* Could not send or store */
-	prvDfmAlertReset(pxAlert);
-
-	return DFM_FAIL;
-}
-
-DfmResult_t xDfmAlertEndOffline(DfmAlertHandle_t xAlertHandle)
-{
-	DfmAlert_t* pxAlert = (DfmAlert_t*)xAlertHandle;
-
-	if (ulDfmSessionIsEnabled() == (uint32_t)0)
-	{
-		return DFM_FAIL;
-	}
-
-	if (pxDfmAlertData == (void*)0)
-	{
-		return DFM_FAIL;
-	}
-
-	if (pxDfmAlertData->ulInitialized == (uint32_t)0)
-	{
-		return DFM_FAIL;
-	}
-
-	if (pxAlert == (void*)0)
-	{
-		return DFM_FAIL;
-	}
-
-	pxAlert->ulChecksum = prvDfmAlertCalculateChecksum((uint8_t*)pxAlert, sizeof(DfmAlert_t) - sizeof(uint32_t));
-
-	/* Try to store */
-	if (prvDfmProcessAlert(prvStoreAlert, prvStorePayloadChunk) == DFM_SUCCESS)
-	{
-		prvDfmAlertReset(pxAlert);
-
-		return DFM_SUCCESS;
-	}
-
-	/* Could not store */
 	prvDfmAlertReset(pxAlert);
 
 	return DFM_FAIL;
@@ -637,6 +632,98 @@ DfmResult_t xDfmAlertGetAll(DfmAlertEntryCallback_t xCallback)
 	return prvDfmGetAll(xCallback, xCallback);
 }
 
+DfmResult_t xDfmAlertStoreRetainedMemory(void)
+{
+#if (defined(DFM_CFG_RETAINED_MEMORY) && (DFM_CFG_RETAINED_MEMORY >= 1))
+	DfmEntryHandle_t xEntryHandle = 0;
+	uint32_t i;
+	const char* szSessionId = (void*)0;
+	char cSessionIdBuffer[DFM_SESSION_ID_MAX_LEN] = { 0 };
+	uint32_t ulAlertId = 0;
+	void* pvBuffer = (void*)0;
+	uint32_t ulBufferSize = 0;
+	
+	if (pxDfmAlertData == (void*)0)
+	{
+		return DFM_FAIL;
+	}
+
+	if (pxDfmAlertData->ulInitialized == (uint32_t)0)
+	{
+		return DFM_FAIL;
+	}
+
+	if (xDfmEntryGetBuffer(&pvBuffer, &ulBufferSize) == DFM_FAIL)
+	{
+		return DFM_FAIL;
+	}
+
+	memset(pvBuffer, 0, ulBufferSize);
+	
+	if (xDfmRetainedMemoryReadAlert(pvBuffer, ulBufferSize) == DFM_SUCCESS)
+	{
+		while(1)
+		{
+			if (xDfmEntryCreateAlertFromBuffer(&xEntryHandle) == DFM_FAIL)
+			{
+				break;
+			}
+
+			if (xDfmEntryGetSessionId(xEntryHandle, &szSessionId) == DFM_FAIL)
+			{
+				break;
+			}
+
+			if (xDfmEntryGetAlertId(xEntryHandle, &ulAlertId) == DFM_FAIL)
+			{
+				break;
+			}
+
+			/* Create local copy of sessionId since the buffer containing it WILL be overwritten! */
+			for (i = 0; i < sizeof(cSessionIdBuffer); i++)
+			{
+				cSessionIdBuffer[i] = szSessionId[i];
+
+				if (cSessionIdBuffer[i] == (char)0)
+				{
+					break;
+				}
+			}
+			
+			if (prvStoreAlert(xEntryHandle) == DFM_FAIL)
+			{
+				break;
+			}
+
+			memset(pvBuffer, 0, ulBufferSize);
+
+			while (xDfmRetainedMemoryReadPayloadChunk(cSessionIdBuffer, ulAlertId, pvBuffer, ulBufferSize) == DFM_SUCCESS)
+			{
+				if (xDfmEntryCreatePayloadChunkFromBuffer(cSessionIdBuffer , ulAlertId, &xEntryHandle) == DFM_FAIL)
+				{
+					break;
+				}
+
+				if (prvStorePayloadChunk(xEntryHandle) == DFM_FAIL)
+				{
+					break;
+				}
+
+				memset(pvBuffer, 0, ulBufferSize);
+			}
+
+			break;
+		}
+	}
+
+	(void)xDfmRetainedMemoryClear();
+
+	return DFM_SUCCESS;
+#else
+	return DFM_FAIL;
+#endif
+}
+
 static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlertEntryCallback_t xPayloadCallback)
 {
 	DfmEntryHandle_t xEntryHandle = 0;
@@ -672,28 +759,90 @@ static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlert
 		return DFM_FAIL;
 	}
 
+#if (defined(DFM_CFG_RETAINED_MEMORY) && (DFM_CFG_RETAINED_MEMORY >= 1))
+	memset(pvBuffer, 0, ulBufferSize);
+	
+	if (xDfmRetainedMemoryReadAlert(pvBuffer, ulBufferSize) == DFM_SUCCESS)
+	{
+		while (1)
+		{
+			if (xDfmEntryCreateAlertFromBuffer(&xEntryHandle) == DFM_FAIL)
+			{
+				break;
+			}
+
+			if (xAlertCallback(xEntryHandle) == DFM_FAIL)
+			{
+				break;
+			}
+
+			if (xDfmEntryGetSessionId(xEntryHandle, &szSessionId) == DFM_FAIL)
+			{
+				break;
+			}
+
+			if (xDfmEntryGetAlertId(xEntryHandle, &ulAlertId) == DFM_FAIL)
+			{
+				break;
+			}
+
+			/* Create local copy of sessionId since the buffer containing it WILL be overwritten! */
+			for (i = 0; i < sizeof(cSessionIdBuffer); i++)
+			{
+				cSessionIdBuffer[i] = szSessionId[i];
+
+				if (cSessionIdBuffer[i] == (char)0)
+				{
+					break;
+				}
+			}
+
+			memset(pvBuffer, 0, ulBufferSize);
+
+			while (xDfmRetainedMemoryReadPayloadChunk(cSessionIdBuffer, ulAlertId, pvBuffer, ulBufferSize) == DFM_SUCCESS)
+			{
+				if (xDfmEntryCreatePayloadChunkFromBuffer(cSessionIdBuffer , ulAlertId, &xEntryHandle) == DFM_FAIL)
+				{
+					break;
+				}
+
+				if (xPayloadCallback(xEntryHandle) == DFM_FAIL)
+				{
+					break;
+				}
+
+				memset(pvBuffer, 0, ulBufferSize);
+			}
+			
+			break;
+		}
+	}
+
+	(void)xDfmRetainedMemoryClear();
+#endif
+
 	memset(pvBuffer, 0, ulBufferSize);
 
 	while (xDfmStorageGetAlert(pvBuffer, ulBufferSize) == DFM_SUCCESS)
 	{
 		if (xDfmEntryCreateAlertFromBuffer(&xEntryHandle) == DFM_FAIL)
 		{
-			return DFM_FAIL;
+			break;
 		}
 
 		if (xAlertCallback(xEntryHandle) == DFM_FAIL)
 		{
-			return DFM_FAIL;
+			break;
 		}
 
 		if (xDfmEntryGetSessionId(xEntryHandle, &szSessionId) == DFM_FAIL)
 		{
-			return DFM_FAIL;
+			break;
 		}
 
 		if (xDfmEntryGetAlertId(xEntryHandle, &ulAlertId) == DFM_FAIL)
 		{
-			return DFM_FAIL;
+			break;
 		}
 
 		/* Create local copy of sessionId since the buffer containing it WILL be overwritten! */
@@ -713,13 +862,14 @@ static DfmResult_t prvDfmGetAll(DfmAlertEntryCallback_t xAlertCallback, DfmAlert
 		{
 			if (xDfmEntryCreatePayloadChunkFromBuffer(cSessionIdBuffer , ulAlertId, &xEntryHandle) == DFM_FAIL)
 			{
-				return DFM_FAIL;
+				break;
 			}
 
 			if (xPayloadCallback(xEntryHandle) == DFM_FAIL)
 			{
-				return DFM_FAIL;
+				break;
 			}
+
 			memset(pvBuffer, 0, ulBufferSize);
 		}
 	}
@@ -809,9 +959,8 @@ static DfmResult_t prvDfmProcessAlert(DfmAlertEntryCallback_t xAlertCallback, Df
 			{
 				ulChunkSize = pxDfmAlertData->xPayloads[i].ulSize - ulOffset;
 			}
-
-			/* TODO: 64-bit compatible */
-			if (xDfmEntryCreatePayloadChunk((DfmAlertHandle_t)pxAlert, (uint16_t)(i + 1UL), j + (uint16_t)1, usChunkCount, (void*)((uint32_t)pxDfmAlertData->xPayloads[i].pvData + ulOffset), ulChunkSize, pxDfmAlertData->xPayloads[i].cDescriptionBuffer, &xEntryHandle) == DFM_FAIL) /*cstat !MISRAC2012-Rule-11.6 We need to modify the address by an offset in order to get next payload chunk*/
+			
+			if (xDfmEntryCreatePayloadChunk((DfmAlertHandle_t)pxAlert, (uint16_t)(i + 1UL), j + (uint16_t)1, usChunkCount, (void*)((uintptr_t)pxDfmAlertData->xPayloads[i].pvData + ulOffset), ulChunkSize, pxDfmAlertData->xPayloads[i].cDescriptionBuffer, &xEntryHandle) == DFM_FAIL) /*cstat !MISRAC2012-Rule-11.6 We need to modify the address by an offset in order to get next payload chunk*/
 			{
 				/* Couldn't create entry for this payload chunk, continue to next */
 				continue;

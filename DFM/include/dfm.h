@@ -1,5 +1,5 @@
 /*
- * Percepio DFM v2.0.0
+ * Percepio DFM v2.1.0
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -104,7 +104,7 @@ extern DfmUserCallback_t xDfmUserGetDeviceName;
 #include <dfmSession.h>
 #include <dfmStorage.h>
 #include <dfmCloud.h>
-
+#include <dfmRetainedMemory.h>
 #include <dfmCodes.h>
 
 #ifndef DFM_CFG_ENABLED
@@ -167,6 +167,9 @@ typedef struct DfmData
 	DfmCloudData_t xCloudData;
 	DfmAlertData_t xAlertData;
 	DfmEntryData_t xEntryData;
+#if defined(DFM_CFG_RETAINED_MEMORY) && (DFM_CFG_RETAINED_MEMORY >= 1)
+	DfmRetainedMemoryData_t xRetainedMemoryData;
+#endif
 } DfmData_t;
 
 /**
