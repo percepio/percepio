@@ -1380,7 +1380,7 @@ void sys_trace_syscall_enter(uint32_t id, const char *name) {
 	if (xTraceIsRecorderEnabled())
 		xSyscallsExtensionEnter(id);
 #else
-	xTraceEventCreateData1(PSF_EVENT_SYSTEM_SYSCALL_ENTER, (TraceUnsignedBaseType_t)id, name, strlen(name) + 1);
+	xTraceEventCreateData1(PSF_EVENT_SYSTEM_SYSCALL_ENTER, (TraceUnsignedBaseType_t)id, (TraceUnsignedBaseType_t*)name, strlen(name) + 1);
 #endif
 }
 
