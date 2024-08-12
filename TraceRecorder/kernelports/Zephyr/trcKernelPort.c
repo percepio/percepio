@@ -1,5 +1,5 @@
 /*
- * Trace Recorder for Tracealyzer v4.9.2
+ * Trace Recorder for Tracealyzer v4.9.2.hotfix1
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -10,6 +10,7 @@
 
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
+#include <zephyr/version.h>
 #include <string.h>
 #include <trcRecorder.h>
 
@@ -39,10 +40,6 @@ static TraceISRHandle_t xHandleISR;
 
 /* Trace recorder controll thread stack */
 static K_THREAD_STACK_DEFINE(TzCtrl_thread_stack, (TRC_CFG_CTRL_TASK_STACK_SIZE));
-
-/* Forward declarations */
-traceResult prvTraceObjectSendNameEvent(void* pvObject, const char* szName, uint32_t uiLength);
-
 
 /**
  * @brief TzCtrl_thread_entry
@@ -439,7 +436,8 @@ void sys_trace_k_thread_sched_abort(struct k_thread *thread) {
 		/* Send name event because this is a delete */
 		for (uiNameLength = 0; (thread->name[uiNameLength] != 0) && (uiNameLength < 128); uiNameLength++) {}
 
-		prvTraceObjectSendNameEvent(thread, thread->name, uiNameLength);
+		/* Send the name event, if possible */
+		(void)xTraceEventCreateData1(PSF_EVENT_OBJ_NAME, (TraceUnsignedBaseType_t)thread, (TraceUnsignedBaseType_t*)thread->name, uiNameLength + 1); /* +1 for termination */
 	}
 #endif /* (TRC_SEND_NAME_ONLY_ON_DELETE == 1) */
 	
