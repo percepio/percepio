@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-    Trace Recorder for Tracealyzer v4.10.2
+    Trace Recorder for Tracealyzer v4.10.2.hotfix1
     Copyright 2023 Percepio AB
     www.percepio.com
 
