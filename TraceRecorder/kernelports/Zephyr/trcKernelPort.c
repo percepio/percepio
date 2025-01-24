@@ -1,5 +1,5 @@
 /*
- * Trace Recorder for Tracealyzer v4.10.2.hotfix1
+ * Trace Recorder for Tracealyzer v4.10.2.hotfix2
  * Copyright 2023 Percepio AB
  * www.percepio.com
  *
@@ -1262,7 +1262,7 @@ void sys_trace_k_pipe_write_blocking(struct k_pipe *pipe, k_timeout_t timeout)
 
 void sys_trace_k_pipe_write_exit(struct k_pipe *pipe, k_timeout_t timeout, int ret)
 {
-	(void)xTraceEventCreate2(ret == 0 ? PSF_EVENT_PIPE_WRITE_SUCCESS : PSF_EVENT_PIPE_WRITE_TIMEOUT, (TraceUnsignedBaseType_t)pipe, (TraceUnsignedBaseType_t)timeout.ticks);
+	(void)xTraceEventCreate2(ret >= 0 ? PSF_EVENT_PIPE_WRITE_SUCCESS : PSF_EVENT_PIPE_WRITE_TIMEOUT, (TraceUnsignedBaseType_t)pipe, (TraceUnsignedBaseType_t)timeout.ticks);
 }
 
 void sys_trace_k_pipe_read_enter(struct k_pipe *pipe, void *data, size_t bytes_to_read, k_timeout_t timeout)
@@ -1276,7 +1276,7 @@ void sys_trace_k_pipe_read_blocking(struct k_pipe *pipe, k_timeout_t timeout)
 
 void sys_trace_k_pipe_read_exit(struct k_pipe *pipe, k_timeout_t timeout, int ret)
 {
-	(void)xTraceEventCreate2(ret == 0 ? PSF_EVENT_PIPE_READ_SUCCESS : PSF_EVENT_PIPE_READ_TIMEOUT, (TraceUnsignedBaseType_t)pipe, (TraceUnsignedBaseType_t)timeout.ticks);
+	(void)xTraceEventCreate2(ret >= 0 ? PSF_EVENT_PIPE_READ_SUCCESS : PSF_EVENT_PIPE_READ_TIMEOUT, (TraceUnsignedBaseType_t)pipe, (TraceUnsignedBaseType_t)timeout.ticks);
 }
 
 /* Memory heap trace function definitions */
