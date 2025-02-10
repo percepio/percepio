@@ -1180,13 +1180,13 @@ void sys_trace_k_pipe_cleanup_exit(struct k_pipe *pipe, int ret);
 void sys_trace_k_pipe_alloc_init_enter(struct k_pipe *pipe, size_t size);
 void sys_trace_k_pipe_alloc_init_exit(struct k_pipe *pipe, size_t size,
     int ret);
-void sys_trace_k_pipe_put_enter(struct k_pipe *pipe, void *data,
+void sys_trace_k_pipe_put_enter(struct k_pipe *pipe, const void *data,
     size_t bytes_to_write, size_t *bytes_written, size_t min_xfer,
     k_timeout_t timeout);
-void sys_trace_k_pipe_put_blocking(struct k_pipe *pipe, void *data,
+void sys_trace_k_pipe_put_blocking(struct k_pipe *pipe, const void *data,
     size_t bytes_to_write, size_t *bytes_written, size_t min_xfer,
     k_timeout_t timeout);
-void sys_trace_k_pipe_put_exit(struct k_pipe *pipe, void *data,
+void sys_trace_k_pipe_put_exit(struct k_pipe *pipe, const void *data,
     size_t bytes_to_write, size_t *bytes_written, size_t min_xfer,
     k_timeout_t timeout, int ret);
 void sys_trace_k_pipe_get_enter(struct k_pipe *pipe, void *data,

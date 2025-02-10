@@ -1193,11 +1193,11 @@ void sys_trace_k_pipe_alloc_init_exit(struct k_pipe *pipe, size_t size, int ret)
 	(void)xTraceEventCreate2(ret == 0 ? PSF_EVENT_PIPE_ALLOC_INIT_SUCCESS : PSF_EVENT_PIPE_ALLOC_INIT_FAILURE, (TraceUnsignedBaseType_t)pipe, (TraceUnsignedBaseType_t)ret);
 }
 
-void sys_trace_k_pipe_put_enter(struct k_pipe *pipe, void *data, size_t bytes_to_write, size_t *bytes_written, size_t min_xfer, k_timeout_t timeout) {
+void sys_trace_k_pipe_put_enter(struct k_pipe *pipe, const void *data, size_t bytes_to_write, size_t *bytes_written, size_t min_xfer, k_timeout_t timeout) {
 
 }
 
-void sys_trace_k_pipe_put_blocking(struct k_pipe *pipe, void *data, size_t bytes_to_write, size_t *bytes_written, size_t min_xfer, k_timeout_t timeout) {
+void sys_trace_k_pipe_put_blocking(struct k_pipe *pipe, const void *data, size_t bytes_to_write, size_t *bytes_written, size_t min_xfer, k_timeout_t timeout) {
 	(void)xTraceEventCreate6(
 		PSF_EVENT_PIPE_PUT_BLOCKING,
 		(TraceUnsignedBaseType_t)pipe,
@@ -1209,7 +1209,7 @@ void sys_trace_k_pipe_put_blocking(struct k_pipe *pipe, void *data, size_t bytes
 	);
 }
 
-void sys_trace_k_pipe_put_exit(struct k_pipe *pipe, void *data, size_t bytes_to_write, size_t *bytes_written, size_t min_xfer, k_timeout_t timeout, int ret) {
+void sys_trace_k_pipe_put_exit(struct k_pipe *pipe, const void *data, size_t bytes_to_write, size_t *bytes_written, size_t min_xfer, k_timeout_t timeout, int ret) {
 	(void)xTraceEventCreate2(ret == 0 ? PSF_EVENT_PIPE_PUT_SUCCESS : PSF_EVENT_PIPE_PUT_TIMEOUT, (TraceUnsignedBaseType_t)pipe, (TraceUnsignedBaseType_t)ret);
 }
 
