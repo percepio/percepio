@@ -387,10 +387,10 @@ extern "C" {
     sys_trace_k_condvar_broadcast_exit(condvar, ret)
 #undef sys_port_trace_k_condvar_wait_enter
 #define sys_port_trace_k_condvar_wait_enter(condvar, ...)                           \
-    sys_trace_k_condvar_wait_enter(condvar, mutex, timeout)
+    sys_trace_k_condvar_wait_enter(condvar, timeout)
 #undef sys_port_trace_k_condvar_wait_exit
-#define sys_port_trace_k_condvar_wait_exit(condvar, ret, ...)                       \
-    sys_trace_k_condvar_wait_exit(condvar, mutex, timeout, ret)
+#define sys_port_trace_k_condvar_wait_exit(condvar, ...)                            \
+    sys_trace_k_condvar_wait_exit(condvar, timeout, ret)
 
 
 /* Queue trace mappings */
@@ -1043,10 +1043,8 @@ void sys_trace_k_condvar_signal_blocking(struct k_condvar *condvar);
 void sys_trace_k_condvar_signal_exit(struct k_condvar *condvar, int ret);
 void sys_trace_k_condvar_broadcast_enter(struct k_condvar *condvar);
 void sys_trace_k_condvar_broadcast_exit(struct k_condvar *condvar, int ret);
-void sys_trace_k_condvar_wait_enter(struct k_condvar *condvar,
-    struct k_mutex *mutex, k_timeout_t timeout);
-void sys_trace_k_condvar_wait_exit(struct k_condvar *condvar,
-    struct k_mutex *mutex, k_timeout_t timeout, int ret);
+void sys_trace_k_condvar_wait_enter(struct k_condvar *condvar, k_timeout_t timeout);
+void sys_trace_k_condvar_wait_exit(struct k_condvar *condvar, k_timeout_t timeout, int ret);
 
 
 /* Queue trace function declarations */

@@ -785,12 +785,12 @@ void sys_trace_k_condvar_broadcast_exit(struct k_condvar *condvar, int ret) {
 	(void)xTraceEventCreate2(PSF_EVENT_CONDVAR_BROADCAST_EXIT, (TraceUnsignedBaseType_t)condvar, (TraceUnsignedBaseType_t)ret);
 }
 
-void sys_trace_k_condvar_wait_enter(struct k_condvar *condvar, struct k_mutex *mutex, k_timeout_t timeout) {
-	(void)xTraceEventCreate3(PSF_EVENT_CONDVAR_WAIT_BLOCKING, (TraceUnsignedBaseType_t)condvar, (TraceUnsignedBaseType_t)mutex, (TraceUnsignedBaseType_t)timeout.ticks);
+void sys_trace_k_condvar_wait_enter(struct k_condvar *condvar, k_timeout_t timeout) {
+	(void)xTraceEventCreate2(PSF_EVENT_CONDVAR_WAIT_BLOCKING, (TraceUnsignedBaseType_t)condvar, (TraceUnsignedBaseType_t)timeout.ticks);
 }
 
-void sys_trace_k_condvar_wait_exit(struct k_condvar *condvar, struct k_mutex *mutex, k_timeout_t timeout, int ret) {
-	(void)xTraceEventCreate3(ret == 0 ? PSF_EVENT_CONDVAR_WAIT_SUCCESS : PSF_EVENT_CONDVAR_WAIT_FAILURE, (TraceUnsignedBaseType_t)condvar, (TraceUnsignedBaseType_t)mutex, (TraceUnsignedBaseType_t)ret);
+void sys_trace_k_condvar_wait_exit(struct k_condvar *condvar, k_timeout_t timeout, int ret) {
+	(void)xTraceEventCreate2(ret == 0 ? PSF_EVENT_CONDVAR_WAIT_SUCCESS : PSF_EVENT_CONDVAR_WAIT_FAILURE, (TraceUnsignedBaseType_t)condvar, (TraceUnsignedBaseType_t)ret);
 }
 
 
