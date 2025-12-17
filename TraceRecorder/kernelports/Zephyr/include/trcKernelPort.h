@@ -43,7 +43,7 @@ extern "C" {
  * @def TRC_PLATFORM_CFG_MINOR
  * @brief Minor release version for recorder.
  */
-#define TRC_PLATFORM_CFG_MINOR 1
+#define TRC_PLATFORM_CFG_MINOR 3
 
 /**
  * @def TRC_PLATFORM_CFG_PATCH
