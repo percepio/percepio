@@ -1,0 +1,28 @@
+# Copyright (c) 2023 Percepio AB
+# SPDX-License-Identifier: Apache-2.0
+
+if !PERCEPIO_TRACERECORDER
+comment "Percepio Tracealyzer support can be enabled from the tracing subsystem"
+endif # PERCEPIO_TRACERECORDER
+
+if PERCEPIO_TRACERECORDER
+comment "Percepio Tracealyzer enabled from the tracing subsystem"
+endif # PERCEPIO_TRACERECORDER
+
+config PERCEPIO_DFM
+	bool "Percepio DevAlert (DFM) support"
+	default n
+
+if PERCEPIO_TRACERECORDER
+# Trace Recorder Kconfig
+menu "TraceRecorder"
+rsource "../TraceRecorder/kernelports/Zephyr/Kconfig"
+endmenu
+endif # PERCEPIO_TRACERECORDER
+
+if PERCEPIO_DFM
+# DFM Kconfig
+menu "DevAlert"
+rsource "../DFM/kernelports/Zephyr/Kconfig"
+endmenu
+endif # PERCEPIO_DFM
