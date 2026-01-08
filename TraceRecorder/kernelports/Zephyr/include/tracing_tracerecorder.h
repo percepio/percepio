@@ -1,6 +1,6 @@
 /*
- * Trace Recorder for Tracealyzer v4.10.3
- * Copyright 2023 Percepio AB
+ * Trace Recorder for Tracealyzer v4.11.0
+ * Copyright 2025 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -17,9 +17,6 @@
 extern "C" {
 #endif
 
-/* Legacy trace defines that are pending refactoring/removal by
- * the Zephyr team.
- */
 #undef sys_trace_isr_enter
 #undef sys_trace_isr_exit
 #undef sys_trace_isr_exit_to_scheduler
@@ -890,8 +887,6 @@ void sys_trace_k_thread_sched_unlock();
 void sys_trace_k_thread_name_set(struct k_thread *thread, int ret);
 void sys_trace_k_thread_switched_out();
 void sys_trace_k_thread_switched_in();
-void sys_trace_k_thread_ready(struct k_thread *thread);
-void sys_trace_k_thread_pend(struct k_thread *thread);
 void sys_trace_k_thread_info(struct k_thread *thread);
 
 
@@ -1287,9 +1282,6 @@ void sys_trace_syscall_enter(uint32_t id, const char *name);
 void sys_trace_syscall_exit(uint32_t id, const char *name);
 
 
-/* Legacy trace functions that are pending refactoring/removal by
- * the Zephyr team.
- */
 void sys_trace_idle(void);
 void sys_trace_isr_enter(void);
 void sys_trace_isr_exit(void);
