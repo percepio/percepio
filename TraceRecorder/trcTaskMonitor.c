@@ -1,5 +1,5 @@
 /*
-* Percepio Trace Recorder for Tracealyzer v4.11.0
+* Percepio Trace Recorder for Tracealyzer v4.11.0.hotfix1
 * Copyright 2025 Percepio AB
 * www.percepio.com
 *
@@ -50,15 +50,12 @@ traceResult xTraceTaskMonitorInitialize(TraceTaskMonitorData_t *pxBuffer)
         pxTraceTaskMonitorData->xMonitoredTasks[i].uxWatermarkLow = 100;
 	}
 
-	for (i = 0; i < TRC_CFG_TASK_MONITOR_MAX_TASKS; i++)
-	{
-		pxTraceTaskMonitorData->xCallbackData.pvTaskAddress = (void*)0;
-		pxTraceTaskMonitorData->xCallbackData.acName[0] = (char)0;
-		pxTraceTaskMonitorData->xCallbackData.uxCPULoad = 0;
-		pxTraceTaskMonitorData->xCallbackData.uxLowLimit = 0;
-		pxTraceTaskMonitorData->xCallbackData.uxHighLimit = 0;
-		pxTraceTaskMonitorData->xCallbackData.uxNumberOfFailedTasks = 0;
-	}
+	pxTraceTaskMonitorData->xCallbackData.pvTaskAddress = (void*)0;
+	pxTraceTaskMonitorData->xCallbackData.acName[0] = (char)0;
+	pxTraceTaskMonitorData->xCallbackData.uxCPULoad = 0;
+	pxTraceTaskMonitorData->xCallbackData.uxLowLimit = 0;
+	pxTraceTaskMonitorData->xCallbackData.uxHighLimit = 0;
+	pxTraceTaskMonitorData->xCallbackData.uxNumberOfFailedTasks = 0;
 
 	(void)xTraceSetComponentInitialized(TRC_RECORDER_COMPONENT_TASK_MONITOR);
 
