@@ -51,39 +51,39 @@ menu "StreamPort Settings"
 	endchoice
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_RTT
-rsource "../../streamports/Jlink_RTT/Kconfig"
+orsource "../../streamports/Jlink_RTT/Kconfig"
 endif
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_ITM
-rsource "../../streamports/ARM_ITM/Kconfig"
+orsource "../../streamports/ARM_ITM/Kconfig"
 endif
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER
-rsource "../../streamports/RingBuffer/Kconfig"
+orsource "../../streamports/RingBuffer/Kconfig"
 endif
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_FILE
-rsource "../../streamports/File/Kconfig"
+orsource "../../streamports/File/Kconfig"
 endif
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_ZEPHYR_SEMIHOST
-rsource "../../kernelports/Zephyr/streamports/Semihost/Kconfig"
+orsource "../../kernelports/Zephyr/streamports/Semihost/Kconfig"
 endif
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_ESP_IDF_APPTRACE
-rsource "../../kernelports/ESP-IDF_FreeRTOS/streamports/ESP_IDF_APPTRACE/Kconfig"
+orsource "../../kernelports/ESP-IDF_FreeRTOS/streamports/ESP_IDF_APPTRACE/Kconfig"
 endif
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_TCPIP
-rsource "../../streamports/TCPIP/Kconfig"
+orsource "../../streamports/TCPIP/Kconfig"
 endif
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_UDP
-rsource "../../streamports/UDP/Kconfig"
+orsource "../../streamports/UDP/Kconfig"
 endif
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_STM32_USB_CDC
-rsource "../../streamports/STM32_USB_CDC/Kconfig"
+orsource "../../streamports/STM32_USB_CDC/Kconfig"
 endif
 
 endmenu # "StreamPort Selection"
