@@ -9,6 +9,18 @@ config PERCEPIO_TRC_CFG_RECORDER_RTOS_ZEPHYR
     bool "Zephyr"
     default y
 
+config PERCEPIO_TRC_CFG_RECORDER_RTOS_FREERTOS
+    bool "Set FREERTOS to false"
+    default n
+
+config PERCEPIO_TRC_CFG_RECORDER_RTOS_ESPIDF_FREERTOS
+    bool "Set ESP-IDF_FREERTOS to false"
+    default n
+
+config PERCEPIO_TRC_CFG_RECORDER_RTOS_THREADX
+    bool "Set THREADX to false"
+    default n
+
 endmenu # "RTOS Hidden settings"
 
 menu "RTOS Specific"
