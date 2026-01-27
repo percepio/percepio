@@ -47,7 +47,7 @@ menu "StreamPort Settings"
 		config PERCEPIO_TRC_CFG_STREAM_PORT_ZEPHYR_SEMIHOST
 			bool "Semihost"
 			depends on PERCEPIO_TRC_CFG_RECORDER_RTOS_ZEPHYR && \
-			QEMU_TARGET && SEMIHOST
+			SEMIHOST
 	endchoice
 
 if PERCEPIO_TRC_CFG_STREAM_PORT_RTT
