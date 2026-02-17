@@ -390,7 +390,10 @@ void sys_trace_k_thread_switched_in(void) {
 	int prio = 0;
 	k_tid_t cur = 0;
 
-	cur = k_current_get();  /* Get cached value if available */
+	if (!k_is_pre_kernel()) {
+		cur = k_current_get();  /* Get cached value if available */
+	}
+
 	if (!cur) {
 		cur = k_sched_current_thread_query();
 	}
