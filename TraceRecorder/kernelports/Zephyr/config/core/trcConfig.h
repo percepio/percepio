@@ -154,8 +154,8 @@ extern "C" {
  * trace display will be affected. In that case, there will be warnings
  * (as User Events) from TzCtrl task, which monitors this.
  */
-#ifdef CONFIG_PERCEPIO_TRC_CFG_ENTRY_SLOTS
-#define TRC_CFG_ENTRY_SLOTS CONFIG_PERCEPIO_TRC_CFG_ENTRY_SLOTS
+#ifdef CONFIG_PERCEPIO_TRC_CFG_ENTRY_TABLE_SLOTS
+#define TRC_CFG_ENTRY_SLOTS CONFIG_PERCEPIO_TRC_CFG_ENTRY_TABLE_SLOTS
 #else
 #define TRC_CFG_ENTRY_SLOTS 50
 #endif
