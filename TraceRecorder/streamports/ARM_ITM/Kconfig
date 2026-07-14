@@ -13,7 +13,7 @@ config PERCEPIO_TRC_CFG_STREAM_PORT_ITM_PORT
 
 config PERCEPIO_TRC_CFG_STREAM_PORT_ITM_INPUT
 	bool "Enable command input"
-	default true
+	default y
 	help
 		When enabled, a debugger script can be used to send trace start/stop
 		commands to the trace recorder.
