@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -16,8 +16,6 @@
  * 	- Session ID
  * 		- User could set this through an API call
  * 	- Device Identifier (Not used in FreeRTOS, from connection to cloud)
- * 		- Check with helge, do they have any ID in settings/memory
- * 		- Their tool could handle it.
  */
 
 #if (defined(DFM_CFG_ENABLED) && ((DFM_CFG_ENABLED) >= 1))
@@ -51,7 +49,7 @@ typedef struct DfmStorageMetadata {
 
 /* Ensure that the sector count and size is compatible with the given partition */
 #if (FIXED_PARTITION_SIZE(dfm_partition) < (CONFIG_PERCEPIO_DFM_CFG_STORAGE_PORT_FCB_SECTOR_COUNT * CONFIG_PERCEPIO_DFM_CFG_STORAGE_PORT_FCB_SECTOR_SIZE))
-#error "DevAlert: You have specified a sector count and size combination which is larger than your dfm_storage partition!"
+#error "DFM: You have specified a sector count and size combination which is larger than your dfm_storage partition!"
 #endif
 
 #define DFM_STORAGE_PORT_FCB_SECTOR_SIZE_ALIGNED (((CONFIG_PERCEPIO_DFM_CFG_STORAGE_PORT_FCB_SECTOR_SIZE) / 8U) * 8U)
@@ -141,11 +139,11 @@ static int prvVerifyMetadata(DfmStorageMetadata_t* pxFlashMetadata, DfmWalkData_
 static int prvDfmGetNext(struct fcb *pxFcb, DfmTraversionState_t* pxTraversionState, void* pvBuffer, uint32_t ulBufferSize)
 {
 	DfmWalkData_t xWalkData = { 0 };
-	void* pvStartSector = NULL;
+	void* pvStartSector = (void*)0;
 	int lWalkResult = 0;
 	int lReadResult = 0;
 
-	if (pxTraversionState->xEntryCtx.loc.fe_sector == NULL)
+	if (pxTraversionState->xEntryCtx.loc.fe_sector == (void*)0)
 		pvStartSector = (void*)pxFcb->f_oldest;
 	else
 		pvStartSector = (void*)pxTraversionState->xEntryCtx.loc.fe_sector;

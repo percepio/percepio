@@ -12,23 +12,48 @@ config PERCEPIO_DFM_CFG_PRODUCTID
 	help
 		An identifier to identify the product type.
 
+config PERCEPIO_DFM_CFG_INITIALIZE_FOR_LOCAL_USE
+	bool "Initialize at startup"
+	default y
+	help
+		Calls xDfmInitializeForLocalUse() right before main(). See dfm.h.
+
+config PERCEPIO_DFM_PRINT_CRLF
+	bool "End lines with CRLF instead of LF"
+	default y
+	help
+		Defines whether DFM prints newlines with CRLF ("\r\n") or with just LF.
+
 config PERCEPIO_DFM_CFG_ENABLE_DEBUG_PRINT
 	bool "Enable debug messages"
 	default n
 	help
 		Enable Diagnostic messages from DFM_DEBUG(	.). Will use DFM_ERROR to output debug information.
 
+config PERCEPIO_DFM_CFG_MAX_STOPWATCHES
+	depends on PERCEPIO_TRACERECORDER
+	int "Maximum number of stopwatches"
+	default 4
+	help
+		Defines the maximum number of stopwatches that can be used (see dfmStopwatch.h).
+		Can be set to zero.
 menu "Cloudport Config"
 
 choice PERCEPIO_DFM_CFG_CLOUDPORT
 	prompt "Cloudport"
 	default PERCEPIO_DFM_CFG_CLOUDPORT_NONE
 
+config PERCEPIO_DFM_CFG_CLOUDPORT_ITM
+	depends on (ARM || ARM64)
+	bool "ITM"
+	help
+		Send Alerts and chunks over ITM.
+
 config PERCEPIO_DFM_CFG_CLOUDPORT_SERIAL
 	bool "Serial"
 	help
 		Send Alerts and chunks through the serial port, used with a serial terminal and accompanying
-		scripts, which post-processes the data and makes it available in DevAlert.
+		scripts, which post-processes the data and makes it available in Detect or DevAlert.
 
 config PERCEPIO_DFM_CFG_CLOUDPORT_NONE
 	bool "None"
@@ -36,6 +61,14 @@ config PERCEPIO_DFM_CFG_CLOUDPORT_NONE
 		Don't send alerts via the cloudport
 
 endchoice # choice PERCEPIO_DFM_CFG_CLOUDPORT
+
+if PERCEPIO_DFM_CFG_CLOUDPORT_ITM
+config PERCEPIO_DFM_CFG_CLOUDPORT_ITM_PORT
+	int "ITM port"
+	default 21
+	help
+		Which ITM port to use.
+endif # PERCEPIO_DFM_CFG_CLOUDPORT_ITM
 
 endmenu # menu "Cloudport Config"
 
@@ -127,12 +160,12 @@ config PERCEPIO_DFM_CFG_SELECTED_STORAGE_STRATEGY_IGNORE
 config PERCEPIO_DFM_CFG_SELECTED_STORAGE_STRATEGY_OVERWRITE
 	bool "Overwrite"
 	help
-		Overwrite old alerts/payloads if the FCB is full.
+		Overwrite old alerts/payloads if the storage is full.
 
 config PERCEPIO_DFM_CFG_SELECTED_STORAGE_STRATEGY_SKIP
 	bool "Skip"
 	help
-		Don't save the new alert/payload of the FCB already is full.
+		Don't save the new alert/payload of the storage already is full.
 
 endchoice # choice "PERCEPIO_SELECTED_STORAGE_STRATEGY"
 
@@ -170,7 +203,7 @@ endchoice # choice "PERCEPIO_DFM_CFG_SELECTED_SESSIONID_STRATEGY"
 
 endmenu # menu "Strategy Settings"
 
-config PERCEPIO_DFM_CFG_RETAINED_MEMORY
+menuconfig PERCEPIO_DFM_CFG_RETAINED_MEMORY
 	bool "Retained Memory support"
 	depends on (RETAINED_MEM && RETENTION)
 	help
@@ -183,7 +216,7 @@ config PERCEPIO_DFM_CFG_RETAINED_MEMORY
 		you might have to disable the mutex usage protecting this memory
 		in order to write to it (such as writing from a hardfault context).
 
-config PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
+menuconfig PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
 	bool "Enable Core Dump support"
 	default n
 	depends on (DEBUG_COREDUMP && DEBUG_COREDUMP_BACKEND_OTHER && DEBUG_COREDUMP_MEMORY_DUMP_MIN)
@@ -198,6 +231,7 @@ choice PERCEPIO_DFM_CFG_COREDUMP_STRATEGY
 
 config PERCEPIO_DFM_CFG_COREDUMP_RETAIN
 	bool "Save in Retained Memory"
+	depends on PERCEPIO_DFM_CFG_RETAINED_MEMORY
 	help
 		This requires that Retained Memory has been enabled and configured properly.
 		See the Getting Started guide for more details.
@@ -208,13 +242,14 @@ config PERCEPIO_DFM_CFG_COREDUMP_STORE
 		Core Dumps will be stored using the selected storageport. If the storageport
 		isn't compatible with the context where the coredump is generated then it will not work.
 
-endchoice # choice "PERCEPIO_DFM_CFG_COREDUMP_STRATEGY"
-
-config PERCEPIO_DFM_CFG_STACKDUMP_SIZE
-	int "Stack Dump size"
-	default 300
+config PERCEPIO_DFM_CFG_COREDUMP_SEND
+	bool "Send using selected cloudport"
 	help
-		How many bytes to dump from the stack (relative to the current stack pointer)
+		Core Dumps will be sent directly using the selected cloudport (e.g. serial).
+		More advance cloudports might not work in this way.
+
+
+endchoice # choice "PERCEPIO_DFM_CFG_COREDUMP_STRATEGY"
 
 config PERCEPIO_DFM_CFG_MAX_COREDUMP_SIZE
 	int "Core Dump size"
@@ -223,16 +258,42 @@ config PERCEPIO_DFM_CFG_MAX_COREDUMP_SIZE
 		Maximum total size of the Core Dump. Since this uses a buffer in memory as a temporary work area,
 		this will affect memory usage.
 
+endif # PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
+
 config PERCEPIO_DFM_CFG_ADD_TRACE
-	bool "Save Trace"
+	bool "Save trace"
 	depends on (PERCEPIO_TRACERECORDER && PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER)
 	default y
 	help
-		If this is set to true, crashcatcher will always try to save a trace with the Alert.
-		Please not that this feature requires the Percepio Trace Recorder to be included in
-		the project as well.
+		If set to true, DFM will include a TraceRecorder snapshot with the alerts.
+		This feature requires the Percepio Trace Recorder to be included in
+		the project.
 
-endif # PERCEPIO_DFM_ENABLE_COREDUMPS
+# there's no "else" directive
+if !PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
+
+config PERCEPIO_DFM_FATAL
+	bool "Override fatal error handler"
+	default y
+	help
+		Override Zephyr's fatal error handler k_sys_fatal_error_handler() to send an 
+		alert, with at least the error reason as a symptom. On ARM targets, if a stack 
+		frame is provided, symptoms are added for PC and SP.  If the error was 
+		triggered by DFM_TRAP(), then it'll contain additional symptoms.
+
+if PERCEPIO_DFM_FATAL
+# almost a duplicate of PERCEPIO_DFM_CFG_ADD_TRACE.
+config PERCEPIO_DFM_FATAL_ADD_TRACE
+	bool "Save trace"
+	depends on (PERCEPIO_TRACERECORDER && PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER)
+	default y
+	help
+		If set to true, the error handler will try to save a trace snapshot with the alert.
+		This feature requires the Percepio Trace Recorder to be included in
+		the project.
+endif # PERCEPIO_DFM_FATAL
+
+endif # !PERCEPIO_DFM_CFG_ENABLE_COREDUMPS
 
 if PERCEPIO_DFM_CFG_STORAGEPORT_FLASH
 rsource "storageports/Flash/Kconfig"

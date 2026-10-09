@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -37,11 +37,23 @@ extern "C" {
 /* Enable diagnostic messages from DFM_DEBUG(...). Will use DFM_ERROR to output debug information. */
 #define DFM_CFG_ENABLE_DEBUG_PRINT CONFIG_PERCEPIO_DFM_CFG_ENABLE_DEBUG_PRINT
 
-/* Add your serial console print string function here (full printf not needed, only "print") */
+/* Add your (serial) console print string function here (full printf not needed, only "print") */
 #define DFM_CFG_PRINT(msg) printk("%s", msg)
 
 /* This will be called for errors. Point this to a suitable print function. This will also be used for DFM_DEBUG_PRINT messages. */
 #define DFM_ERROR_PRINT(msg) DFM_CFG_PRINT(msg)
+
+/* Set line break characters, i.e. \n or \r\n. */
+#if defined(CONFIG_PERCEPIO_DFM_PRINT_CRLF)
+#define LNBR "\r\n"
+#else
+#define LNBR "\n"
+#endif
+
+/* The maximum number of stopwatches (slots) */
+#if defined(CONFIG_PERCEPIO_DFM_CFG_MAX_STOPWATCHES)
+#define DFM_CFG_MAX_STOPWATCHES CONFIG_PERCEPIO_DFM_CFG_MAX_STOPWATCHES
+#endif
 
 /**
  * @brief The maximum size of a "chunk" that will be stored or sent.
@@ -132,6 +144,8 @@ extern "C" {
 #else
 	#define DFM_CFG_ENABLE_COREDUMPS 0
 #endif
+
+#define DFM_CFG_ENABLE_TASK_MONITOR CONFIG_PERCEPIO_DFM_TASK_MONITOR
 
 #ifdef __cplusplus
 }

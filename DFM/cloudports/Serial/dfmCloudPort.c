@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -12,6 +12,7 @@
 #include <dfmCloudPort.h>
 #include <dfmCloudPortConfig.h>
 #include <dfm.h>
+#include <dfmUtility.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -20,56 +21,50 @@
 /* Prototype for the print function */
 extern void vMainUARTPrintString( char * pcString );
 
-#define DFM_PRINT_SERIAL_DATA(msg) vMainUARTPrintString(msg)
-
-	
 static DfmCloudPortData_t *pxCloudPortData = (void*)0;
 
-static uint32_t prvPrintDataAsHex(uint8_t* data, int size);
+static uint16_t prvPrintDataAsHex(uint16_t seed, uint8_t* data, int size);
 static DfmResult_t prvSerialPortUploadEntry(DfmEntryHandle_t xEntryHandle);
 
-static uint32_t prvPrintDataAsHex(uint8_t* data, int size)
+static uint16_t prvPrintDataAsHex(uint16_t seed, uint8_t* data, int size)
 {
-	uint32_t checksum = 0;
+	uint16_t checksum = usDfmCalculateCrc16Ccitt(seed, data, (uint32_t)size);
 	int i;
 	char buf[10];
 
-    for (i = 0; i < size; i++)
-    {
-    	uint8_t byte = data[i];
-    	checksum += byte;
-        snprintf(buf, sizeof(buf), " %02X", (unsigned int)byte);
+	for (i = 0; i < size; i++)
+	{
+		uint8_t byte = data[i];
+		snprintf(buf, sizeof(buf), " %02X", (unsigned int)byte);
 
-        if (i % 20 == 0)
-        {
-            DFM_CFG_LOCK_SERIAL();
-            DFM_PRINT_ALERT_DATA(("[[ DATA:"));
-        }
+		if (i % 20 == 0)
+		{
+			DFM_CFG_LOCK_SERIAL();
+			DFM_PRINT_ALERT_DATA(("[[ DATA:"));
+		}
 
-        DFM_PRINT_ALERT_DATA(buf);
+		DFM_PRINT_ALERT_DATA(buf);
 
-        if ( (i+1) % 20 == 0)
-        {
-            DFM_PRINT_ALERT_DATA((" ]]\n"));
-            DFM_CFG_UNLOCK_SERIAL();
-        }
-    }
+		if ( (i+1) % 20 == 0)
+		{
+			DFM_PRINT_ALERT_DATA((" ]]" LNBR));
+			DFM_CFG_UNLOCK_SERIAL();
+		}
+	}
 
-    if (i % 20 != 0)
-    {
-        DFM_PRINT_ALERT_DATA((" ]]\n"));
-        DFM_CFG_UNLOCK_SERIAL();
-    }
+	if (i % 20 != 0)
+	{
+		DFM_PRINT_ALERT_DATA((" ]]" LNBR));
+		DFM_CFG_UNLOCK_SERIAL();
+	}
 
-    return checksum;
+	return checksum;
 }
 
 static DfmResult_t prvSerialPortUploadEntry(DfmEntryHandle_t xEntryHandle)
 {
-	uint32_t checksum;
+	uint16_t checksum;
 	uint32_t datalen;
-
-	int counter = 0;
 
 	if (pxCloudPortData == (void*)0)
 	{
@@ -92,18 +87,19 @@ static DfmResult_t prvSerialPortUploadEntry(DfmEntryHandle_t xEntryHandle)
 	}
 
 	DFM_CFG_LOCK_SERIAL();
-	DFM_PRINT_SERIAL_DATA("\n[[ DevAlert Data Begins ]]\n");
+	DFM_PRINT_ALERT_DATA(LNBR "[[ DevAlert Data Begins ]]" LNBR);
 	DFM_CFG_UNLOCK_SERIAL();
 
-	checksum = 0; // Make sure to clear this
-	checksum += prvPrintDataAsHex((uint8_t*)xEntryHandle, datalen);
+	checksum = prvPrintDataAsHex(0U, (uint8_t*)xEntryHandle, (int)datalen);
 
-	snprintf(pxCloudPortData->buf, sizeof(pxCloudPortData->buf), "[[ DevAlert Data Ended. Checksum: %d ]]\n", (unsigned int)0);
+	snprintf(pxCloudPortData->buf, sizeof(pxCloudPortData->buf),
+		"[[ DevAlert Data Ended. Checksum: %d ]]" LNBR,
+		(unsigned int)checksum);
 
 	DFM_CFG_LOCK_SERIAL();
-	DFM_PRINT_SERIAL_DATA(pxCloudPortData->buf);
+	DFM_PRINT_ALERT_DATA(pxCloudPortData->buf);
 	DFM_CFG_UNLOCK_SERIAL();
-
+                
 	return DFM_SUCCESS;
 }
 

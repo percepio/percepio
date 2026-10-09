@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -26,6 +26,11 @@ DfmResult_t xDfmKernelPortInitialize(DfmKernelPortData_t *pxBuffer)
 
 	pxKernelPortData = pxBuffer;
 
+	// All DFM submodules have their own data storage object, allocated in
+	// the main DFM datastructure. Not used here, but might be needed 
+	// in the future. Assign the dummy field to avoid warnings.
+	pxKernelPortData->dummy = 0;
+        
 	return DFM_SUCCESS;
 }
 

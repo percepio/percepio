@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -246,6 +246,21 @@ DfmResult_t xDfmSessionSetSessionIdStrategy(DfmSessionIdStrategy_t xStrategy);
  */
 DfmResult_t xDfmSessionGetSessionIdStrategy(DfmSessionIdStrategy_t* pxStrategy);
 
+/**
+ * @brief Gets number of alerts generated in the current session (since startup).
+ *
+ * @retval Number of alerts, or 0 if DFM is not yet initialized.
+ */
+
+uint32_t xDfmSessionGetAlertCount(void);
+
+/**
+ * @brief Gets number of new alerts generated since the last call of xDfmSessionGetNewAlerts.
+ *
+ * @retval Number of new alerts, or 0 if DFM is not yet initialized.
+ */
+uint32_t xDfmSessionGetNewAlerts(void);
+
 /** @} */
 
 #else
@@ -256,9 +271,11 @@ DfmResult_t xDfmSessionGetSessionIdStrategy(DfmSessionIdStrategy_t* pxStrategy);
 #define ulDfmSessionIsEnabled() (0)
 #define xDfmSessionSetStatus(ulStatus) (DFM_FAIL)
 #define xDfmSessionGetStatus(pulStatus) (DFM_FAIL)
-#define xDfmSessionAssignAlertId(pulAlertId) (DFM_FAIL)
+#define xDfmSessionGenerateNewAlertId() (DFM_FAIL)
+#define xDfmSessionGetAlertId(pulAlertId) (DFM_FAIL)
 #define xDfmSessionGetProduct(pulProduct) (DFM_FAIL)
 #define xDfmSessionGetFirmwareVersion(pszFirmwareVersionBuffer) (DFM_FAIL)
+#define xDfmSessionSetDeviceName(szDeviceName) (DFM_FAIL)
 #define xDfmSessionGetDeviceName(pszDeviceName) (DFM_FAIL)
 #define xDfmSessionGetUniqueSessionId(pszUniqueSessionId) (DFM_FAIL)
 #define xDfmSessionSetAlertStrategy(xStrategy) (DFM_FAIL)
@@ -271,6 +288,9 @@ DfmResult_t xDfmSessionGetSessionIdStrategy(DfmSessionIdStrategy_t* pxStrategy);
 #define xDfmSessionGetSessionIdStrategy(pxStrategy) (DFM_FAIL)
 #define xDfmSessionSetDeviceNameStrategy(xStrategy) (DFM_FAIL)
 #define xDfmSessionGetDeviceNameStrategy(pxStrategy) (DFM_FAIL)
+#define xDfmSessionGetAlertCount() (0)
+#define xDfmSessionGetNewAlerts() (0)
+
 
 #endif
 

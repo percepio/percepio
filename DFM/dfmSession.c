@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -27,6 +27,8 @@ typedef struct DfmSessionStorage
 #endif
 
 static DfmSessionData_t* pxDfmSessionData = (void*)0;
+
+uint32_t _last_alert_count = 0;
 
 DfmResult_t prvGetSessionStorageVersion(DfmSessionStorage_t* pxSessionStorage, uint32_t* pulVersion);
 DfmResult_t prvGetSessionStorageEnabled(DfmSessionStorage_t* pxSessionStorage, uint32_t* pulEnabled);
@@ -382,6 +384,42 @@ DfmResult_t xDfmSessionGenerateNewAlertId(void)
 	pxDfmSessionData->ulAlertCounter++;
 
 	return DFM_SUCCESS;
+}
+
+uint32_t xDfmSessionGetAlertCount(void)
+{
+	if (pxDfmSessionData == (void*)0)
+	{
+		return 0;
+	}
+
+	if (pxDfmSessionData->ulInitialized == 0UL)
+	{
+		return 0;
+	}
+
+	return pxDfmSessionData->ulAlertCounter;
+}
+
+uint32_t xDfmSessionGetNewAlerts(void)
+{
+	uint32_t new_alert_count, count;
+
+	if (pxDfmSessionData == (void*)0)
+	{
+		return 0;
+	}
+
+	if (pxDfmSessionData->ulInitialized == 0UL)
+	{
+		return 0;
+	}
+
+	count = xDfmSessionGetAlertCount();
+	new_alert_count = count - _last_alert_count;
+	_last_alert_count = count;
+
+	return new_alert_count;
 }
 
 DfmResult_t xDfmSessionGetAlertId(uint32_t* pulAlertId)

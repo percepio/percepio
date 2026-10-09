@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -10,15 +10,15 @@
 #include "dfmCloudPort.h"
 #include <dfmCloudPortConfig.h>
 #include <dfm.h>
+#include <dfmUtility.h>
 #include <string.h>
 #include <zephyr/kernel.h>
-#include <zephyr/sys/crc.h>
 
 static DfmCloudPortData_t* pxCloudPortData = (void*)0;
 
 static uint16_t prvPrintDataAsHex(uint16_t seed, uint8_t* data, uint32_t size)
 {
-	uint16_t crc = crc16_ccitt(seed, data, size);
+	uint16_t crc = usDfmCalculateCrc16Ccitt(seed, data, size);
 	int i;
 	char buf[10];
 

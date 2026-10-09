@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -162,6 +162,17 @@ DfmResult_t xDfmRetainedMemoryReadAlert(void* pvBuffer, uint32_t ulBufferSize)
 DfmResult_t xDfmRetainedMemoryWritePayloadChunk(DfmEntryHandle_t xEntryHandle)
 {
 	return prvRetainedMemoryWrite(DFM_RETAINED_MEMORY_TYPE_PAYLOAD, xEntryHandle);
+}
+
+DfmResult_t xDfmRetainedMemoryCommit(void)
+{
+	if ((pxRetainedMemoryData == (void*)0) ||
+		(pxRetainedMemoryData->ulInitialized == 0U))
+	{
+		return DFM_FAIL;
+	}
+
+	return xDfmRetainedMemoryPortCommit();
 }
 
 DfmResult_t xDfmRetainedMemoryReadPayloadChunk(char* szSessionId, uint32_t ulAlertId, void* pvBuffer, uint32_t ulBufferSize)

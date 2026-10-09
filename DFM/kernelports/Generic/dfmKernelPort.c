@@ -1,33 +1,34 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
  *
- * Generic Kernel port
+ * BareMetal Kernel port
  */
 
 #include <dfm.h>
-#include <dfmKernelPort.h>
 
 #if ((DFM_CFG_ENABLED) >= 1)
 
+static DfmKernelPortData_t *pxKernelPortData = (void*)0;
+
 DfmResult_t xDfmKernelPortInitialize(DfmKernelPortData_t *pxBuffer)
 {
-	(void)pxBuffer;
+	if (pxBuffer == (void*)0)
+	{
+		return DFM_FAIL;
+	}
+
+	pxKernelPortData = pxBuffer;
 
 	return DFM_SUCCESS;
 }
 
 DfmResult_t xDfmKernelPortGetCurrentTaskName(char** pszTaskName)
 {
-	if (pszTaskName == (void*)0)
-	{
-		return DFM_FAIL;
-	}
-
-	*pszTaskName = "UnknownTask";	/* This can be changed to retrieve the current task name if a kernel is present */
+	*pszTaskName = "N/A";
 
 	return DFM_SUCCESS;
 }

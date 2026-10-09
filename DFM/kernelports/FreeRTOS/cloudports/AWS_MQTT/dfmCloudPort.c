@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -21,7 +21,6 @@
 #include <transport_secure_sockets.h>
 #include <iot_network.h>
 #include <aws_clientcredential.h>
-#include <aws_iot_metrics.h>
 #include <iot_default_root_certificates.h>
 
 /**
@@ -136,10 +135,8 @@ static uint32_t prvMqttConnect()
     xConnectInfo.pClientIdentifier = clientcredentialIOT_THING_NAME;
     xConnectInfo.clientIdentifierLength = (uint16_t)strlen(clientcredentialIOT_THING_NAME);
 
-    /* Use the metrics string as username to report the OS and MQTT client version
-     * metrics to AWS IoT. */
-    xConnectInfo.pUserName = AWS_IOT_METRICS_STRING;
-    xConnectInfo.userNameLength = AWS_IOT_METRICS_STRING_LENGTH;
+    xConnectInfo.pUserName = "Dummy";
+    xConnectInfo.userNameLength = (uint16_t)strlen(xConnectInfo.pUserName);
 
     /* Set MQTT keep-alive period. If the application does not send packets at an interval less than
      * the keep-alive period, the MQTT library will send PINGREQ packets. */
@@ -150,7 +147,7 @@ static uint32_t prvMqttConnect()
      * is passed as NULL. */
     xResult = MQTT_Connect(&xMQTTContext,
                            &xConnectInfo,
-                           NULL,
+                           (void*)0,
                            CONNACK_RECV_TIMEOUT_MS,
                            &xSessionPresent);
 
@@ -181,7 +178,7 @@ DfmResult_t xDfmCloudPortInitialize(DfmCloudPortData_t* pxBuffer)
 
     /* Configure credentials for TLS mutual authenticated session. */
     xSocketsConfig.enableTls = true;
-    xSocketsConfig.pAlpnProtos = NULL;
+    xSocketsConfig.pAlpnProtos = (void*)0;
     xSocketsConfig.maxFragmentLength = 0;
     xSocketsConfig.disableSni = false;
     xSocketsConfig.pRootCa = tlsATS1_ROOT_CERTIFICATE_PEM;
@@ -264,7 +261,7 @@ DfmResult_t xDfmCloudPortSend(DfmEntryHandle_t xEntryHandle)
         (void)memset((void*)&xNetworkContext, 0x00, sizeof(xNetworkContext));
 
         /* Try to reinitialize and connect again. */
-        if (xDfmCloudPortInitialize(NULL) != 0)
+        if (xDfmCloudPortInitialize((void*)0) != 0)
         {
             return DFM_FAIL;
         }

@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -59,6 +59,18 @@ DfmResult_t xDfmRetainedMemoryPortClear(void);
  * @retval DFM_SUCCESS Success
  */
 DfmResult_t xDfmRetainedMemoryPortWrite(void* pvData, unsigned int ulWriteSize, unsigned int ulWriteOffset);
+
+/**
+ * @brief Commit all data written since the last clear
+ *
+ * This stores the incrementally calculated SUM32 checksum and then writes the
+ * validity prefix after the alert and all payload data that fitted have been
+ * stored.
+ *
+ * @retval DFM_FAIL Failure
+ * @retval DFM_SUCCESS Success
+ */
+DfmResult_t xDfmRetainedMemoryPortCommit(void);
 
 /**
  * @brief Read data from Retained Memory

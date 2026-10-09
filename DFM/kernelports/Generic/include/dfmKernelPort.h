@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -9,7 +9,7 @@
 /**
  * @file
  *
- * @brief DFM Generic Kernel port API
+ * @brief DFM BareMetal Kernel port API
  */
 
 #ifndef DFM_KERNEL_PORT_H
@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup dfm_kernel_port_generic_apis DFM Generic Kernel port API
+ * @defgroup dfm_kernel_port_freertos_apis DFM FreeRTOS Kernel port API
  * @ingroup dfm_apis
  * @{
  */
@@ -58,6 +58,11 @@ DfmResult_t xDfmKernelPortInitialize(DfmKernelPortData_t* pxBuffer);
 DfmResult_t xDfmKernelPortGetCurrentTaskName(char** pszTaskName);
 
 /** @} */
+
+/* This is only used if CrashCatcher detects an internal stack
+   overflow and stops. Normally not used and not really necessary. */
+#define vDfmDisableInterrupts()
+
 
 #ifdef __cplusplus
 }

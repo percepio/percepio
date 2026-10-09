@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -88,6 +88,17 @@ DfmResult_t xDfmRetainedMemoryReadAlert(void* pvBuffer, uint32_t ulBufferSize);
 DfmResult_t xDfmRetainedMemoryWritePayloadChunk(DfmEntryHandle_t xEntryHandle);
 
 /**
+ * @brief Commit a retained-memory alert and successfully written payload data
+ *
+ * The retained data remains invalid until this function succeeds. Payload
+ * storage is best effort and may contain only a leading set of chunks.
+ *
+ * @retval DFM_FAIL Failure
+ * @retval DFM_SUCCESS Success
+ */
+DfmResult_t xDfmRetainedMemoryCommit(void);
+
+/**
  * @brief Read Payload chunk Entry
  *
  * @param[in] szSessionId Requested Session Id.
@@ -116,8 +127,9 @@ DfmResult_t xDfmRetainedMemoryClear(void);
 #define xDfmRetainedMemoryWriteAlert(xEntryHandle, ulOverwrite) ((void)(xEntryHandle), (void)(ulOverwrite), DFM_FAIL)
 #define xDfmRetainedMemoryReadAlert(pvBuffer, ulBufferSize) ((void)(pvBuffer), (void)(ulBufferSize), DFM_FAIL)
 #define xDfmRetainedMemoryWritePayloadChunk(xEntryHandle, ulOverwrite) ((void)(xEntryHandle), (void)(ulOverwrite), DFM_FAIL)
+#define xDfmRetainedMemoryCommit() (DFM_FAIL)
 #define xDfmRetainedMemoryReadPayloadChunk(szSessionId, ulAlertId, pvBuffer, ulBufferSize) ((void)(szSessionId), (void)(ulAlertId), (void)(pvBuffer), (void)(ulBufferSize), DFM_FAIL)
-#define xDfmRetainedMemoryReset(void) (DFM_SUCCESS)
+#define xDfmRetainedMemoryClear(void) (DFM_SUCCESS)
 
 #endif
 

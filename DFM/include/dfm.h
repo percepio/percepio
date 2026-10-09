@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -29,6 +29,13 @@ extern "C" {
 #include <dfmTypes.h>
 #include <dfmConfig.h>
 
+#ifndef LNBR
+#define LNBR "\n"
+#endif
+
+/* Shared buffer for snprintf calls, extern declared in dfm.h and used by dfmStopwatch, dfmTaskMonitor and dfmCrashCatcher. */
+extern char cDfmPrintBuffer[128];
+
 /**
  * @brief A callback type that is used by DFM to retrieve user supplied identifiers
  *
@@ -52,7 +59,7 @@ typedef DfmResult_t (*DfmUserCallback_t)(char cBuffer[], uint32_t ulSize, uint32
  * to generate unique "alert keys" for each alert.
  *
  * THIS MUST NOT BE A CONSTANT DUMMY STRING, EVEN FOR BASIC TESTING.
- * DUPLICATE ALERT KEYS ARE IGNORED BY DEVALERT.
+ * DUPLICATE ALERT KEYS ARE IGNORED BY DETECT AND DEVALERT.
  *
  * The alert key follows the pattern "DevAlert/DeviceID/SessionID/AlertCounter"
  * and must be unique across all alerts from all devices, over all time.
@@ -78,7 +85,7 @@ extern DfmUserCallback_t xDfmUserGetUniqueSessionID;
  * It is suppoed to provide the "Device ID" for each alert.
  * This is combined with the "Session ID" to generate unique "alert keys" for each alert.
  *
- * THIS MUST NOT BE A CONSTANT DUMMY STRING. DUPLICATE ALERT KEYS ARE IGNORED BY DEVALERT.
+ * THIS MUST NOT BE A CONSTANT DUMMY STRING. DUPLICATE ALERT KEYS ARE IGNORED BY DETECT AND DEVALERT.
  *
  * If using AWS IoT Core, note that Device ID does not need to match the Thing Name
  * (i.e. clientcredentialIOT_THING_NAME in /demos/include/aws_clientcredentials.h).
@@ -106,6 +113,8 @@ extern DfmUserCallback_t xDfmUserGetDeviceName;
 #include <dfmCloud.h>
 #include <dfmRetainedMemory.h>
 #include <dfmCodes.h>
+#include <dfmStopwatch.h>
+#include <dfmTaskMonitor.h>
 
 #ifndef DFM_CFG_ENABLED
 #error DFM_CFG_ENABLED not set in dfmConfig.h!
@@ -115,7 +124,7 @@ extern DfmUserCallback_t xDfmUserGetDeviceName;
 #error DFM_CFG_FIRMWARE_VERSION_MAX_LEN not set in dfmConfig.h!
 #endif
 
-#if DFM_CFG_PRODUCTID == 0
+#ifndef DFM_CFG_PRODUCTID
 #error DFM_CFG_PRODUCTID not set in dfmConfig.h!
 #endif
 
@@ -123,10 +132,12 @@ extern DfmUserCallback_t xDfmUserGetDeviceName;
 #define DFM_ERROR_PRINT(msg) 
 #endif
 
+#ifndef DFM_DEBUG_PRINT
 #if (DFM_CFG_ENABLE_DEBUG_PRINT == 1)
 #define DFM_DEBUG_PRINT(msg) DFM_ERROR_PRINT(msg)
 #else
 #define DFM_DEBUG_PRINT(msg) ((void)(msg))
+#endif
 #endif
 
 #if ((DFM_CFG_ENABLED) == 1)
@@ -180,7 +191,7 @@ typedef struct DfmData
  * to generate unique "alert keys" for each alert.
  *
  * THIS MUST NOT BE A CONSTANT DUMMY STRING, EVEN FOR BASIC TESTING.
- * DUPLICATE ALERT KEYS ARE IGNORED BY DEVALERT.
+ * DUPLICATE ALERT KEYS ARE IGNORED BY DETECT AND DEVALERT.
  *
  * The alert key follows the pattern "DevAlert/DeviceID/SessionID/AlertCounter"
  * and must be unique across all alerts from all devices, over all time.
@@ -199,7 +210,7 @@ typedef struct DfmData
  * @param[in] xGetDeviceName This user-defined function provides the "Device ID" for each alert.
  * This is combined with the "Session ID" to generate unique "alert keys" for each alert.
  *
- * THIS MUST NOT BE A CONSTANT DUMMY STRING. DUPLICATE ALERT KEYS ARE IGNORED BY DEVALERT.
+ * THIS MUST NOT BE A CONSTANT DUMMY STRING. DUPLICATE ALERT KEYS ARE IGNORED BY DETECT AND DEVALERT.
  *
  * If using AWS IoT Core, note that Device ID does not need to match the Thing Name
  * (i.e. clientcredentialIOT_THING_NAME in /demos/include/aws_clientcredentials.h).
@@ -209,6 +220,21 @@ typedef struct DfmData
  * @retval DFM_SUCCESS Success
  */
 DfmResult_t xDfmInitialize(DfmUserCallback_t xGetUniqueSessionID, DfmUserCallback_t xGetDeviceName);
+
+/**
+ * @internal Initializes the entire DFM system, simplified version for local use.
+ *
+ * This is intended for when DFM is used with serial output to a directly connected host computer,
+ * that parses the data using percepio-receiver.py.
+ * This function calls xDfmInitialize but applies default "magic" values for DeviceID and for
+ * SessionID. The percepio-receiver tool will replace these values on the host machine, using the
+ * current time as SessionID and a static DeviceID provided as parameter.
+ *
+ * @retval DFM_FAIL Failure
+ * @retval DFM_SUCCESS Success
+ */
+
+DfmResult_t xDfmInitializeForLocalUse(void);
 
 /**
  * @brief Is DFM initialized?
@@ -253,6 +279,7 @@ uint32_t ulDfmIsInitialized(void);
 /* Dummy defines */
 #define xDfmInitialize(p,fv) (DFM_FAIL)
 #define ulDfmIsInitialized() (0)
+#define xDfmInitializeForLocalUse() (DFM_FAIL)
 #define xDfmEnable(ulOverride) (DFM_FAIL)
 #define xDfmDisable() (DFM_FAIL)
 #define ulDfmIsEnabled() (0)
