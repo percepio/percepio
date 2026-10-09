@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -44,8 +44,30 @@ typedef struct DfmStorageMetadata {
 
 DfmResult_t xDfmStoragePortInitialize(DfmStoragePortData_t *pxBuffer)
 {
+	DfmStorageStrategy_t storageStrategy = DFM_STORAGE_STRATEGY_IGNORE;
+	
 	ulWrOffset = 0;
 	ulRdOffset = 0;
+	
+	if (xDfmSessionGetStorageStrategy(&storageStrategy)) == DFM_FAIL)
+	{
+		DFM_ERROR_PRINT("\nDFM Error, can't check StorageStrategy\n");
+		return DFM_FAIL;
+	}
+
+	/************************************************************************** 
+	This storage port requires that the storage strategy is set to OVERWRITE,
+	otherwise alerts from earlier sessions will prevent storing new alerts.
+    Make sure to call xDfmSessionSetStorageStrategy(DFM_STORAGE_STRATEGY_OVERWRITE);
+    right after DFM is initialized.
+	**************************************************************************/ 	
+	if (storageStrategy != DFM_STORAGE_STRATEGY_OVERWRITE)
+	{
+		DFM_ERROR_PRINT("\nDFM Error in xDfmStoragePortInitialize: DFM_STORAGE_STRATEGY_OVERWRITE is required.\n");
+		return DFM_FAIL;
+	}
+	
+	
 	return DFM_SUCCESS;
 }
 
@@ -162,7 +184,7 @@ DfmResult_t xDfmStoragePortReset(void)
 	{
 		return DFM_FAIL;
 	}
-
+    
 	return DFM_SUCCESS;
 }
 

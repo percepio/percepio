@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -343,10 +343,12 @@ DfmResult_t xDfmEntryGetEndMarkers(DfmEntryHandle_t xEntryHandle, uint8_t** pucM
 #define xDfmEntryGetChunkIndex(xEntryHandle, pusChunkIndex) (DFM_FAIL)
 #define xDfmEntryGetChunkCount(xEntryHandle, pusChunkCount) (DFM_FAIL)
 #define xDfmEntryGetSessionIdSize(xEntryHandle, pusSize) (DFM_FAIL)
+#define xDfmEntryGetDeviceNameSize(xEntryHandle, pusSize) (DFM_FAIL)
 #define xDfmEntryGetDescriptionSize(xEntryHandle, pusSize) (DFM_FAIL)
 #define xDfmEntryGetDataSize(xEntryHandle, pulSize) (DFM_FAIL)
 #define xDfmEntryGetAlertId(xEntryHandle, pulAlertId) (DFM_FAIL)
 #define xDfmEntryGetSessionId(xEntryHandle, pszSessionId) (DFM_FAIL)
+#define xDfmEntryGetDeviceName(xEntryHandle, pszDeviceName) (DFM_FAIL)
 #define xDfmEntryGetDescription(xEntryHandle, pszDescription) (DFM_FAIL)
 #define xDfmEntryGetData(xEntryHandle, ppvData) (DFM_FAIL)
 #define xDfmEntryGetEndMarkers(xEntryHandle, pucMarkersBuffer) (DFM_FAIL)

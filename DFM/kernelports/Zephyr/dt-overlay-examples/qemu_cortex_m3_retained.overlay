@@ -1,0 +1,38 @@
+/* Reserve the upper 9,392 bytes of SRAM for the DFM retained test variant.
+ * This suffix overlay is not loaded automatically. Add it with:
+ *   -DEXTRA_DTC_OVERLAY_FILE=boards/qemu_cortex_m3_retained.overlay
+ * when CONFIG_PERCEPIO_DFM_CFG_RETAINED_MEMORY=y. Do not combine it with
+ * another overlay that reserves the same upper SRAM range.
+ */
+
+/ {
+	dfm_retained_memory: memory@2000db50 {
+		compatible = "zephyr,memory-region", "mmio-sram";
+		reg = <0x2000db50 0x24b0>;
+		ranges = <0x0 0x2000db50 0x24b0>;
+		zephyr,memory-region = "DfmRetained";
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		retainedmem0: retainedmem {
+			compatible = "zephyr,retained-ram";
+			status = "okay";
+			ranges;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			retention0: retention@0 {
+				compatible = "zephyr,retention";
+				status = "okay";
+				reg = <0x0 0x24b0>;
+				prefix = [44 46 4d 52];
+				checksum = <0>;
+			};
+		};
+	};
+};
+
+&sram0 {
+	reg = <0x20000000 0xdb50>;
+};

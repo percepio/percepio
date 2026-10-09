@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -24,29 +24,54 @@ extern "C" {
  */
 #define DFM_CFG_ENABLED (1)
 
+
+/**
+ * @brief An identifier of the product type.
+ * Should be 0 by default, unless the backend has multiple products defined.
+ */
+#define DFM_CFG_PRODUCTID (1)
+
 /**
  * @brief The firmware version. This needs to be set to differentiate the alerts between versions.
  */
-#define DFM_CFG_FIRMWARE_VERSION "X.Y.Z"
+#define DFM_CFG_FIRMWARE_VERSION "v1.0.0"
 
 /**
  * @brief An identifier of the product type.
  */
-#define DFM_CFG_PRODUCTID (0)
 
 /* Enable diagnostic messages from DFM_DEBUG(...). Will use DFM_ERROR to output debug information. */
-#define DFM_CFG_ENABLE_DEBUG_PRINT 0
+#define DFM_CFG_ENABLE_DEBUG_PRINT 1
 
-/* Add your serial console print string function here (full printf not needed, only "print") */
-#define DFM_CFG_PRINT(msg)
+/* Make sure the "print" function is defined everywhere it is used. */
+extern void vMainUARTPrintString( char * pcString );
+
+/* Add your (serial) console print string function here (full printf not needed, only "print") */
+#define DFM_CFG_PRINT(msg) printf(msg)
 
 /* This will be called for errors. Point this to a suitable print function. This will also be used for DFM_DEBUG_PRINT messages. */
 #define DFM_ERROR_PRINT(msg) DFM_CFG_PRINT(msg)
 
+/* Set line break characters, i.e. \n or \r\n. This is set by a preprocessor
+ * definition in the project compiler settings (USE_UNIX_STYLE_LINEBREAKS=1) */
+#if (USE_UNIX_STYLE_LINEBREAKS == 1)
+#define LNBR "\n"
+#else
+/* Windows-style is default if USE_UNIX_STYLE_LINEBREAKS is not defined. */
+#define LNBR "\r\n"
+#endif
+
+/* The maximum number of stopwatches (slots) */
+#define DFM_CFG_MAX_STOPWATCHES 4
+
 /**
  * @brief The maximum size of a "chunk" that will be stored or sent.
+ * If a DFM payload (core dump, trace, etc) is larger than the chunk size, it will be divided into multiple
+ * chunks that are uploaded one by one, and later recombined by the Dispatcher tool.
+ * This setting affects the internal RAM buffer size for alerts and payloads.
+ * Using a smaller chunk size reduces the RAM usage of the DFM library, but also means more uploads.
  */
-#define DFM_CFG_MAX_PAYLOAD_CHUNK_SIZE (1000)
+#define DFM_CFG_MAX_PAYLOAD_CHUNK_SIZE (2000)
 
 /**
  * @brief The maximum length of the device name.
@@ -111,6 +136,8 @@ extern "C" {
  *	DFM_DEVICE_NAME_STRATEGY_ONDEVICE	This device knows its' name, get it
  */
 #define DFM_CFG_DEVICENAME_STRATEGY DFM_DEVICE_NAME_STRATEGY_ONDEVICE
+
+#define DFM_CFG_ENABLE_TASK_MONITOR 1
 
 #ifdef __cplusplus
 }

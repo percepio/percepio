@@ -1,6 +1,6 @@
 /*
- * Percepio DFM v2.1.0
- * Copyright 2023 Percepio AB
+ * Percepio DFM
+ * Copyright 2023-2026 Percepio AB
  * www.percepio.com
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -58,6 +58,10 @@ DfmResult_t xDfmKernelPortInitialize(DfmKernelPortData_t* pxBuffer);
 DfmResult_t xDfmKernelPortGetCurrentTaskName(char** pszTaskName);
 
 /** @} */
+
+
+#define vDfmDisableInterrupts() portDISABLE_INTERRUPTS();
+
 
 #ifdef __cplusplus
 }
