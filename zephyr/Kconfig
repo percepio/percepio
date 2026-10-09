@@ -2,27 +2,34 @@
 # SPDX-License-Identifier: Apache-2.0
 
 if !PERCEPIO_TRACERECORDER
-comment "Percepio Tracealyzer support can be enabled from the tracing subsystem"
-endif # PERCEPIO_TRACERECORDER
+comment "Percepio Tracealyzer support can be enabled from Subsystems and OS Services->Tracing Support"
+endif
 
 if PERCEPIO_TRACERECORDER
-comment "Percepio Tracealyzer enabled from the tracing subsystem"
-endif # PERCEPIO_TRACERECORDER
+comment "Percepio Tracealyzer support is enabled from Subsystems and OS Services->Tracing Support"
 
-config PERCEPIO_DFM
-	bool "Percepio DevAlert (DFM) support"
-	default n
-
-if PERCEPIO_TRACERECORDER
 # Trace Recorder Kconfig
-menu "TraceRecorder"
+menu "Percepio TraceRecorder configuration"
 rsource "../TraceRecorder/kernelports/Zephyr/Kconfig"
 endmenu
 endif # PERCEPIO_TRACERECORDER
 
+if !PERCEPIO_DFM
+config PERCEPIO_DFM_STUB_INCLUDED
+	bool "Include Percepio Detect (DFM) stub API"
+	default n
+	help
+		This will replace DFM API functions with empty macros that will still allow
+		DFM instrumented user code (xDfmAlertBegin(...) etc.) to compile without errors.
+endif
+
+config PERCEPIO_DFM
+	bool "Percepio Detect (DFM) support"
+	default n
+
 if PERCEPIO_DFM
 # DFM Kconfig
-menu "DevAlert"
+menu "Detect"
 rsource "../DFM/kernelports/Zephyr/Kconfig"
 endmenu
 endif # PERCEPIO_DFM
