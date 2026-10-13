@@ -19,7 +19,7 @@
 /* The following Alert Types are published and will not change. */
 #define DFM_TYPE_XYZ (8) /* User-Defined Alert */
 #define DFM_TYPE_ZEPHYR_FATAL_ERROR (7) /* Zephyr Fatal Error */
-#define DFM_TYPE_TASKMONITOR_ALERT (6) /* TaskMonitor alert */
+#define DFM_TYPE_TASKMONITOR_ANOMALY (6) /* TaskMonitor alert */
 #define DFM_TYPE_STACK_CHK_FAILED (5) /* Stack corruption detected */
 #define DFM_TYPE_STOPWATCH (4) /* Stopwatch alert */
 #define DFM_TYPE_HARDFAULT (3) /* Hard Fault */
