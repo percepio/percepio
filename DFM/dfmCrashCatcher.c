@@ -77,6 +77,15 @@ static uint8_t ucDataBuffer[CRASH_DUMP_BUFFER_SIZE] __attribute__ ((aligned (8))
 static void dumpHalfWords(const uint16_t* pMemory, size_t elementCount);
 static void dumpWords(const uint32_t* pMemory, size_t elementCount);
 
+static int prvIsFaultException(void)
+{
+	const uint32_t ipsr = __get_IPSR();
+
+	/* Use the active exception, not the xPSR saved in the dump. Exceptions
+	 * 3-7 are faults (HardFault through SecureFault); NMI (2) is excluded. */
+	return ipsr >= 3U && ipsr <= 7U;
+}
+
 void vDfmCrashCatcherClearTrapInfo(void)
 {
 	dfmTrapInfo.alertType = -1;
@@ -251,6 +260,9 @@ const CrashCatcherMemoryRegion* CrashCatcher_GetMemoryRegions(void)
 }
 void CrashCatcher_DumpStart(const CrashCatcherInfo* pInfo)
 {
+	/* A fault may interrupt DFM_TRAP while its metadata is still populated. */
+	const int isTrap =
+		!prvIsFaultException() && dfmTrapInfo.alertType >= 0;
 	int alerttype;
 	const char* szFileName = (void*)0;
 	char* szCurrentTaskName = (void*)0;
@@ -263,7 +275,7 @@ void CrashCatcher_DumpStart(const CrashCatcherInfo* pInfo)
 
 	CC_DBG_LOG("CrashCatcher_DumpStart" LNBR);
 
-	if (dfmTrapInfo.alertType >= 0)
+	if (isTrap)
 	{
 		/* Called on DFM_TRAP calls.
 		 * DFM_TRAP stores its metadata in dfmTrapInfo before dfmCoreDump:
@@ -315,7 +327,7 @@ void CrashCatcher_DumpStart(const CrashCatcherInfo* pInfo)
 		xDfmAlertAddSymptom(xAlertHandle, DFM_SYMPTOM_STACKPTR, pInfo->sp);
 #endif
 
-		if (dfmTrapInfo.alertType >= 0)
+		if (isTrap)
 		{
 			/* On DFM_TRAP */
 #ifdef DFM_SYMPTOM_FILE
@@ -454,6 +466,10 @@ static void dumpWords(const uint32_t* pMemory, size_t elementCount)
 
 CrashCatcherReturnCodes CrashCatcher_DumpEnd(void)
 {
+	/* Re-evaluate locally so a nested fault cannot inherit trap behavior. */
+	const int isTrap =
+		!prvIsFaultException() && dfmTrapInfo.alertType >= 0;
+
     CC_DBG_LOG("CrashCatcher_DumpEnd (DFM output begins)" LNBR);
     
 #if ((DFM_CFG_CRASH_ADD_TRACE) >= 1)
@@ -463,7 +479,7 @@ CrashCatcherReturnCodes CrashCatcher_DumpEnd(void)
 	if (xAlertHandle != 0)
 	{
 		uint32_t size = (uint32_t)ucBufferPos - (uint32_t)ucDataBuffer;
-		const char *szDumpName = dfmTrapInfo.alertType >= 0 ?
+		const char *szDumpName = isTrap ?
 			DFM_TRAP_DUMP_NAME : DFM_FAULT_DUMP_NAME;
 
 		if ((ulCoredumpOverflowed == 0U) &&
@@ -502,10 +518,10 @@ CrashCatcherReturnCodes CrashCatcher_DumpEnd(void)
 	}
 
     
-	CC_DBG_LOG("dfmTrapInfo.alertType: %d" LNBR, dfmTrapInfo.alertType);
-	/* If triggered by DFM_TRAP */
-	if (dfmTrapInfo.alertType != -1)
+	/* Faults ignore all trap metadata, including the restart flag. */
+	if (isTrap)
 	{
+		CC_DBG_LOG("dfmTrapInfo.alertType: %d" LNBR, dfmTrapInfo.alertType);
 		if (dfmTrapInfo.restart == 1)
 		{
 			CC_DBG_LOG("Type: DFM_TRAP with restart." LNBR);
