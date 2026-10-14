@@ -539,6 +539,8 @@ void prvDfmTrap_NoCoreDump(int alertType, const char *message, const char *file,
 #if defined(CONFIG_PERCEPIO_DFM_CFG_ENABLE_COREDUMPS) && \
 	defined(CONFIG_IRQ_OFFLOAD) && defined(CONFIG_CPU_CORTEX_M)
 
+extern volatile irq_offload_routine_t offload_routine;
+
 #include <cmsis_core.h>
 
 static inline int in_msp_context(void)
