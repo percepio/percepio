@@ -203,7 +203,7 @@ endchoice # choice "PERCEPIO_DFM_CFG_SELECTED_SESSIONID_STRATEGY"
 
 endmenu # menu "Strategy Settings"
 
-menuconfig PERCEPIO_DFM_CFG_RETAINED_MEMORY
+config PERCEPIO_DFM_CFG_RETAINED_MEMORY
 	bool "Retained Memory support"
 	depends on (RETAINED_MEM && RETENTION)
 	help
